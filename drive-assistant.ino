@@ -8,9 +8,11 @@
 
 // PINS
 const unsigned ALARM_PIN = 13;
+const unsigned ALARM_SPEAKER_PIN = 10;
 
 // SETTINGS
 const int REV_LIMIT = 2500; // TODO: change to 6000
+const unsigned ALARM_T_MICROS = 1000000 / 1500;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // GLOBALS
@@ -42,30 +44,60 @@ int obdRead(byte pid) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// MAIN CORUTINES: Return true if no other co-routines should be called per a this loop
+// Sub coroutines: Called from main coroutines. Routines are doing it's thing while being called.
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void alarmRinging() {
+  static unsigned long lastTick = 0;
+
+  unsigned long now = micros();
+
+  if (lastTick > now) {
+    // timer overflow, hack for this periode
+    lastTick = now;
+  }
+
+  if (lastTick + ALARM_T_MICROS <= now) {
+    // whole periode passed
+    digitalWrite(ALARM_SPEAKER_PIN, !digitalRead(ALARM_SPEAKER_PIN));
+    lastTick = now;
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// MAIN CORUTINES: 
+// Will be called from main loop.
+// Return true if no other co-routines should be called per a this loop
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool highRevNotify() {
+bool highRevNotifying() {
   int rpm = obdRead(PID_RPM);
-  digitalWrite(ALARM_PIN, rpm > REV_LIMIT ? HIGH : LOW);
+
+  if (rpm > REV_LIMIT) {
+     digitalWrite(ALARM_PIN, HIGH);
+     alarmRinging();
+  } else {
+    // alarm off
+    digitalWrite(ALARM_PIN, LOW);
+    digitalWrite(ALARM_SPEAKER_PIN, LOW);
+  }
 
   // high revs notify doesn't interfere with other co-routines
   return false;
 }
 
-bool revMatch() {
+bool revMatching() {
   // TODO:
   
   return false;
 }
 
-bool cruiseControl() {
+bool cruiseControling() {
   // TODO:
   
   return false;
 }
 
-bool launchControl() {
+bool launchControling() {
   // TODO:
   
   return false;
@@ -78,19 +110,19 @@ bool launchControl() {
 void loop()
 {
 
-  if (highRevNotify()) {
+  if (highRevNotifying()) {
     return;
   }
 
-  if (revMatch()) {
+  if (revMatching()) {
     return;
   }
 
-  if (cruiseControl()) {
+  if (cruiseControling()) {
     return;
   }
 
-  if (launchControl()) {
+  if (launchControling()) {
     return;
   }
   
