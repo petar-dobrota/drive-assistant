@@ -9,16 +9,23 @@
 // PINS
 const unsigned ALARM_PIN = 13;
 const unsigned ALARM_SPEAKER_PIN = 10;
+const unsigned CLUTCH_DOWN_PIN = 9;
+const unsigned CLUTCH_TOUCH_PIN = 8;
 
 // SETTINGS
 const int REV_LIMIT = 2500; // TODO: change to 6000
 const unsigned ALARM_T_MICROS = 1000000 / 1500;
+const unsigned NUM_GEARS = 5;
+const float GEAR_RATIOS[NUM_GEARS] = {98.4252f, 59.5613f, 40.1856f, 30.6805f, 23.5658f}; // gearRatio=rpm/v
+const float GEAR_RATIO_TOLERANCE = 0.15f; // gear ratio tolerance when determinating in which gear car is 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // GLOBALS
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 COBDI2C obd;
+int currRpm;
+int currSpeed;
 
 void setup()
 {
@@ -69,10 +76,32 @@ void alarmRinging() {
 // Return true if no other co-routines should be called per a this loop
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool highRevNotifying() {
-  int rpm = obdRead(PID_RPM);
+int lastGear;
+bool gearMonitoring() {
+  if (digitalRead(CLUTCH_TOUCH_PIN)) {
+    // can't calc gear if clutch is engaged
+    return false;
+  }
 
-  if (rpm > REV_LIMIT) {
+  float currRatio = (float)currRpm / currSpeed;
+  int gear = -1;
+  for (int i = 0; i < NUM_GEARS; i++) {
+    float maxDelta = GEAR_RATIOS[i] * GEAR_RATIO_TOLERANCE;
+    if ((currRatio > GEAR_RATIOS[i] - maxDelta) && (currRatio < GEAR_RATIOS[i] + maxDelta)) {
+      gear = i + 1;
+      break;
+    }
+  }
+  if (gear != -1) {
+    lastGear = gear;
+  }
+  
+  return false;
+}
+
+bool highRevNotifying() {
+
+  if (currRpm > REV_LIMIT) {
      digitalWrite(ALARM_PIN, HIGH);
      alarmRinging();
   } else {
@@ -110,6 +139,14 @@ bool launchControling() {
 void loop()
 {
 
+  // TODO: OBD READS
+  currRpm = obdRead(PID_RPM);
+  currSpeed = obdRead(PID_SPEED);
+  
+  if (gearMonitoring()) {
+    return;
+  }
+  
   if (highRevNotifying()) {
     return;
   }
