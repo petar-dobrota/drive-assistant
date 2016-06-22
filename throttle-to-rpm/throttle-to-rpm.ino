@@ -1,11 +1,9 @@
-#include <Keyboard.h>
 
 #include <Arduino.h>
-#include <Wire.h>
 #include <OBD.h>
-#include <SPI.h>
 #include <SD.h>
-#include "Print.h"
+#include <DataLogger.h>
+
 
 // obd adapter pinout:
 // rx - white
@@ -36,73 +34,7 @@ void signalError() {
   while(true);
 }
     
-class DataLogger {
-  private:
-  
-    char currLog[F_NAME_LEN];
-    
-    void makeFileName(char* fname, int logNum) {
-      sprintf(fname, "RUN_%04d.LOG", logNum);
-    }
 
-  public:
-
-    DataLogger() {
-    }
-
-    const char* getCurrLog() {
-      return currLog;
-    }
-
-    void begin() {
-      char *max="RUN_0000.LOG";
-      
-      File dir = SD.open("/");
-      dir.rewindDirectory();
-      while (true) {
-    
-        File entry =  dir.openNextFile();
-
-        if (!entry) {
-          // no more files
-          break;
-        }
-            
-        if (!entry.isDirectory()) {
-          if(strcmp(entry.name(), max) > 0) {
-            strcpy(max, entry.name());
-          }
-        }
-
-        entry.close();    
-      }
-      dir.close();   
-
-      // find next num
-      max[8] = 0;
-      int val = atoi(max + 4) + 1;
-      
-      makeFileName(currLog, val);
-    }
-
-    void log(int rpm, int throttlePos) {
-      File f = SD.open(currLog, FILE_WRITE);
-
-      if (!f) {
-        signalError();
-      }
-
-      f.print(millis());
-      f.print(", ");
-      f.print(throttlePos);
-      f.print(", ");
-      f.print(rpm);
-
-      f.print('\n');
-      f.flush();
-      f.close();
-    }
-};
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // GLOBALS
@@ -125,10 +57,9 @@ void setup()
   digitalWrite(TEST_1_PIN, HIGH);
   digitalWrite(TEST_2_PIN, HIGH);
 
-  if (!SD.begin(SD_CS_PIN)) {
+  if (!logger.begin(SD_CS_PIN)) {
     signalError();
   }
-  logger.begin();
 
   obd.begin();
   while (!obd.init());  
@@ -160,7 +91,20 @@ int obdRead(byte pid) {
 
 void fMonitoring() {
   int throttlePos = analogRead(THROTTLE_POS_PIN);
-  logger.log(currRpm, throttlePos);
+  
+  File f = logger.startLogging();
+
+  f.print(millis());
+  f.print(", ");
+  
+  f.print(throttlePos);
+  f.print(", ");
+  
+  f.print(currRpm);
+  f.print('\n');
+
+  f.flush();
+  f.close();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
