@@ -16,10 +16,10 @@
 // PINS
 const unsigned ALARM_PIN = 13;
 
-const unsigned SD_CS_PIN = 10;
-// miso 12
-// mosi 11
-// sck  13
+const unsigned SD_CS_PIN = 10; // orange
+// miso 12 yellow
+// mosi 11 blue
+// sck  13 white
 const unsigned THROTTLE_POS_PIN = A0;
 
 // TEST: DELETE
