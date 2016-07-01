@@ -1,3 +1,5 @@
+#include <U8glib.h>
+#include "utility\u8g.h"
 
 #include <Arduino.h>
 #include <OBD.h>
@@ -29,13 +31,6 @@ const unsigned TEST_2_PIN = 4;
 
 const unsigned F_NAME_LEN = 13;
 
-void signalError() {
-  digitalWrite(TEST_0_PIN, LOW);
-  while(true);
-}
-    
-
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // GLOBALS
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -43,6 +38,18 @@ void signalError() {
 COBD obd;
 int currRpm;
 DataLogger logger;
+U8GLIB_SSD1306_128X64 u8g(U8G_I2C_OPT_NONE);
+
+void signalError(const char *err) {
+  digitalWrite(TEST_0_PIN, LOW);
+  if (err != 0) {
+    u8g.drawStr( 0, 22, err);
+  }
+  while(true);
+}
+void signalError() {
+  signalError(0);
+}
 
 void setup()
 {
@@ -58,13 +65,17 @@ void setup()
   digitalWrite(TEST_2_PIN, HIGH);
 
   if (!logger.begin(SD_CS_PIN)) {
-    signalError();
+    signalError("log init F");
   }
 
   obd.begin();
   while (!obd.init());  
+  u8g.setFont(u8g_font_u8glib_4);
+  u8g.drawStr( 0, 22, "Perica KRALJ!");
+  
 
   digitalWrite(TEST_1_PIN, LOW);
+  u8g.drawStr( 0, 22, "Init OK");
 }
 
 
