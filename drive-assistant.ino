@@ -16,6 +16,12 @@ const unsigned ALARM_SPEAKER_PIN = 10;
 const unsigned CLUTCH_DOWN_PIN = 9;
 const unsigned CLUTCH_TOUCH_PIN = 8;
 
+// TEST: DELETE
+const unsigned TEST_0_PIN = 2;
+const unsigned TEST_1_PIN = 3;
+const unsigned TEST_2_PIN = 4;
+const unsigned TEST_IN = 5;
+
 // SETTINGS
 const int REV_LIMIT = 2500; // TODO: change to 6000
 const unsigned ALARM_T_MICROS = 1000000 / 1500;
@@ -28,8 +34,10 @@ const float GEAR_RATIO_TOLERANCE = 0.15f; // gear ratio tolerance when determina
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 COBD obd;
-int currRpm;
-int currSpeed;
+int obdReadBuff[2];
+int &currRpm = obdReadBuff[0];
+int &currSpeed = obdReadBuff[1];
+float dt; // delta time between iterations in micro seconds
 
 void setup()
 {
@@ -40,9 +48,45 @@ void setup()
   pinMode(CLUTCH_DOWN_PIN, INPUT);
   pinMode(CLUTCH_TOUCH_PIN, INPUT);
   
+  pinMode(TEST_0_PIN, OUTPUT);
+  pinMode(TEST_1_PIN, OUTPUT);
+  pinMode(TEST_2_PIN, OUTPUT);
+  pinMode(TEST_IN, INPUT);
+  
+  digitalWrite(TEST_0_PIN, HIGH);
+  digitalWrite(TEST_1_PIN, HIGH);
+  digitalWrite(TEST_2_PIN, HIGH);
 
   obd.begin();
   while (!obd.init());  
+
+  digitalWrite(TEST_1_PIN, LOW);
+}
+
+float rpmToThrottle(int rpm) {
+  return 0;
+}
+
+void showGear(int g) {
+
+  if (g == 1) {
+    digitalWrite(TEST_0_PIN, HIGH);
+    digitalWrite(TEST_1_PIN, LOW);
+    digitalWrite(TEST_2_PIN, LOW);
+  } else if (g==2){
+    digitalWrite(TEST_0_PIN, LOW);
+    digitalWrite(TEST_1_PIN, HIGH);
+    digitalWrite(TEST_2_PIN, LOW); 
+  } else if (g==3){
+    digitalWrite(TEST_0_PIN, LOW);
+    digitalWrite(TEST_1_PIN, LOW);
+    digitalWrite(TEST_2_PIN, HIGH);
+  } else if (g==-1) {
+    // no leds
+    digitalWrite(TEST_0_PIN, LOW);
+    digitalWrite(TEST_1_PIN, LOW);
+    digitalWrite(TEST_2_PIN, LOW);
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -52,7 +96,7 @@ void setup()
 int obdRead(byte pid) {
   int value;
   if (obd.read(pid, value)) {
-    return pid;
+    return value;
   } else {
     // TODO: Stop exec
     return -1;
@@ -79,6 +123,24 @@ void alarmRinging() {
   }
 }
 
+void rpmSetting(int desiredRpm) {
+  float diff = (float) (currRpm - desiredRpm) / (currRpm + desiredRpm);
+  if (diff < 0) {
+    diff = -diff;
+  }
+
+  float out;
+  if (diff < 0.15f) {
+    out = rpmToThrottle(desiredRpm);
+  } else if(currRpm < desiredRpm) {
+    out = 1;
+  } else {
+    out = 0;
+  }
+
+  // TODO: Set throttlePos = out
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // MAIN CORUTINES: 
 // Will be called from main loop.
@@ -87,10 +149,6 @@ void alarmRinging() {
 
 int lastGear;
 bool gearMonitoring() {
-  if (digitalRead(CLUTCH_TOUCH_PIN)) {
-    // can't calc gear if clutch is engaged
-    return false;
-  }
 
   float currRatio = (float)currRpm / currSpeed;
   int gear = -1;
@@ -102,7 +160,10 @@ bool gearMonitoring() {
     }
   }
   if (gear != -1) {
-    lastGear = gear;
+    if (gear != lastGear) {
+      showGear(gear);
+      lastGear = gear;
+    }
   }
   
   return false;
