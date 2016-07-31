@@ -35,7 +35,7 @@ const unsigned F_NAME_LEN = 13;
 // GLOBALS
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-COBD obd;
+//COBD obd;
 int currRpm;
 DataLogger logger;
 U8GLIB_SSD1306_128X64 u8g(U8G_I2C_OPT_NONE);
@@ -68,11 +68,11 @@ void setup()
     signalError("log init F");
   }
 
-  obd.begin();
-  while (!obd.init());  
   u8g.setFont(u8g_font_u8glib_4);
   u8g.drawStr( 0, 22, "Perica KRALJ!");
   
+  //obd.begin();
+  //while (!obd.init());  
 
   digitalWrite(TEST_1_PIN, LOW);
   u8g.drawStr( 0, 22, "Init OK");
@@ -84,8 +84,9 @@ void setup()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 int obdRead(byte pid) {
+  return 0;
   int value;
-  if (obd.read(pid, value)) {
+  if (true /*obd.read(pid, value)*/) {
     return value;
   } else {
     // TODO: Stop exec
