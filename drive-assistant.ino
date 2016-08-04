@@ -40,9 +40,9 @@ const float rpmToThrottleFunction[rpmToThrottleN] = {1.2f};
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 COBD obd;
-int obdReadBuff[2];
-int &currRpm = obdReadBuff[0];
-int &currSpeed = obdReadBuff[1];
+
+float currRpm;
+int currSpeed;
 float dt; // delta time between iterations in micro seconds
 
 void setup()
@@ -78,7 +78,7 @@ float rpmToThrottle(int rpm) {
   float mx = rpm / xStep;
   int lx = (int) mx;
   int hx = lx + 1;
-
+  
   if (hx < rpmToThrottleN) {
     float ly = rpmToThrottleFunction[lx];
     float hy = rpmToThrottleFunction[hx];
@@ -150,7 +150,7 @@ void alarmRinging() {
   }
 }
 
-void rpmSetting(int desiredRpm) {
+void rpmSetting(float desiredRpm) {
   float diff = (float) (currRpm - desiredRpm) / (currRpm + desiredRpm);
   if (diff < 0) {
     diff = -diff;
@@ -177,7 +177,7 @@ void rpmSetting(int desiredRpm) {
 int lastGear;
 bool gearMonitoring() {
 
-  float currRatio = (float)currRpm / currSpeed;
+  float currRatio = currRpm / currSpeed;
   int gear = -1;
   for (int i = 0; i < NUM_GEARS; i++) {
     float maxDelta = GEAR_RATIOS[i] * GEAR_RATIO_TOLERANCE;
@@ -211,7 +211,27 @@ bool highRevNotifying() {
   return false;
 }
 
+bool shouldRevMatch() {
+  // rev match should be done if:
+  // - clutch is pressed
+  // - !revmatching is currently executing more than 2s
+  // - engine temp reached 75C
+
+  // clutch is pressed
+  if (!digitalRead(CLUTCH_DOWN_PIN)) {
+    return false;
+  }
+
+  
+  
+  return true;
+}
+
 bool revMatching() {
+  if(!shouldRevMatch) {
+    return false;
+  }
+  
   // TODO:
   
   return false;

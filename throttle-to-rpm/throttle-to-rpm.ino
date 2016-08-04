@@ -118,6 +118,26 @@ void fMonitoring() {
   f.close();
 }
 
+void fPrinting(float throttlePos) {
+  static unsigned long repaintDelayMillis = 100;
+  static unsigned long lastPrintTime = 0;
+
+  unsigned long currentTime = millis();
+  
+  // patch timer overflow
+  if (currentTime < lastPrintTime) {
+    lastPrintTime = currentTime;
+  }
+
+  if (lastPrintTime + repaintDelayMillis < currentTime) {
+    // should repaint
+    lastPrintTime = currentTime;
+
+    char buff[20];
+    //sprintf(buff, "%d\% at %d", (int)(throttlePos*100), currRpm); 
+    u8g.drawStr( 0, 22, buff);
+  }
+}
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // LOOP
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
