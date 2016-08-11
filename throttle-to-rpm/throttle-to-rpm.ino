@@ -36,19 +36,15 @@ const unsigned F_NAME_LEN = 13;
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 COBD obd;
-int currRpm;
 DataLogger logger;
-U8GLIB_SSD1306_128X64 u8g(U8G_I2C_OPT_NONE);
 
-void signalError(const char *err) {
-  digitalWrite(TEST_0_PIN, LOW);
-  if (err != 0) {
-    u8g.drawStr( 0, 22, err);
-  }
-  while(true);
-}
+// obd data
+float currRpm;
+int currApp; // current value of Accelerator Pedal Position (APP) sensor
+
 void signalError() {
-  signalError(0);
+  digitalWrite(TEST_0_PIN, LOW);
+  while(true);
 }
 
 void setup()
@@ -65,17 +61,13 @@ void setup()
   digitalWrite(TEST_2_PIN, HIGH);
 
   if (!logger.begin(SD_CS_PIN)) {
-    signalError("log init F");
+    signalError();
   }
 
   obd.begin();
-  while (!obd.init());  
-  u8g.setFont(u8g_font_u8glib_4);
-  u8g.drawStr( 0, 22, "Perica KRALJ!");
-  
+  while (!obd.init());
 
   digitalWrite(TEST_1_PIN, LOW);
-  u8g.drawStr( 0, 22, "Init OK");
 }
 
 
@@ -93,6 +85,12 @@ int obdRead(byte pid) {
   }
 }
 
+// performs reads from all sensors(OBD, switches, APP)
+void allReads() {
+  currApp = analogRead(THROTTLE_POS_PIN);
+  currRpm = (float) obdRead(PID_RPM);
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // MAIN CORUTINES: 
 // Will be called from main loop.
@@ -100,15 +98,14 @@ int obdRead(byte pid) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-void fMonitoring() {
-  int throttlePos = analogRead(THROTTLE_POS_PIN);
-  
+void functionMonitoring() {
+
   File f = logger.startLogging();
 
   f.print(millis());
   f.print(", ");
   
-  f.print(throttlePos);
+  f.print(currApp);
   f.print(", ");
   
   f.print(currRpm);
@@ -118,37 +115,16 @@ void fMonitoring() {
   f.close();
 }
 
-void fPrinting(float throttlePos) {
-  static unsigned long repaintDelayMillis = 100;
-  static unsigned long lastPrintTime = 0;
-
-  unsigned long currentTime = millis();
-  
-  // patch timer overflow
-  if (currentTime < lastPrintTime) {
-    lastPrintTime = currentTime;
-  }
-
-  if (lastPrintTime + repaintDelayMillis < currentTime) {
-    // should repaint
-    lastPrintTime = currentTime;
-
-    char buff[20];
-    //sprintf(buff, "%d\% at %d", (int)(throttlePos*100), currRpm); 
-    u8g.drawStr( 0, 22, buff);
-  }
-}
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // LOOP
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 void loop()
 {
 
-  // TODO: OBD READS
-  currRpm = obdRead(PID_RPM);
+  // read all sensor data
+  allReads();
 
-  fMonitoring();
-
-  delay(50);
+  functionMonitoring();
+  
+  delay(100);
 }
