@@ -1,6 +1,8 @@
 #include <Arduino.h>
 #include <Wire.h>
 #include <OBD.h>
+#include "Int64.h"
+#include "Time.h"
 
 // obd adapter pinout:
 // rx - white
@@ -33,7 +35,10 @@ const float GEAR_RATIO_TOLERANCE = 0.15f; // gear ratio tolerance when determina
 const int rpmToThrottleDomain = 7000;
 const int rpmToThrottleN = 120;
 // TODO: add actual data
-const float rpmToThrottleFunction[rpmToThrottleN] = {1.2f};
+const float rpmToThrottleFunction[rpmToThrottleN] = {.2f};
+
+const Int64 NO_REV_MATCH_IN_PROGRESS = Int64(((unsigned long) -1) >> 2, (unsigned long) -1); // maxVal / 2
+const Int64 REV_MATCH_MAX_DURATION = 2000;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // GLOBALS
@@ -41,9 +46,13 @@ const float rpmToThrottleFunction[rpmToThrottleN] = {1.2f};
 
 COBD obd;
 
+// TODO: Don't forget to check if all gloabals are both read and set!
 float currRpm;
 int currSpeed;
+int engineTemp;
+
 float dt; // delta time between iterations in micro seconds
+static Int64 revMatchStartedMillis = NO_REV_MATCH_IN_PROGRESS;
 
 void setup()
 {
@@ -130,6 +139,39 @@ int obdRead(byte pid) {
   }
 }
 
+void allReads() {
+  currRpm = obdRead(PID_RPM);
+  currSpeed = obdRead(PID_SPEED);
+  engineTemp = obdRead(PID_ENGINE_OIL_TEMP);
+  
+  // TODO: Add other reads
+}
+
+bool shouldRevMatch() {
+  // rev match should be done if:
+  // - clutch is pressed
+  // - !revmatching is currently executing more than 2s
+  // - engine temp reached 75C
+
+  // is clutch pressed
+  if (!digitalRead(CLUTCH_DOWN_PIN)) {
+    return false;
+  }
+
+  if (engineTemp < 78 || engineTemp > 100) {
+    // engine either cold or too hot
+    return false;
+  }
+  
+  Int64 currentTimeMillis = Time::currentTimeMillis();
+  if (revMatchStartedMillis + REV_MATCH_MAX_DURATION < currentTimeMillis) {
+    // max revmatching time breached
+    return false;
+  }
+  
+  return true;
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Sub coroutines: Called from main coroutines. Routines are doing it's thing while being called.
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -151,13 +193,15 @@ void alarmRinging() {
 }
 
 void rpmSetting(float desiredRpm) {
+  static float closeRange = 0.08f;
+  
   float diff = (float) (currRpm - desiredRpm) / (currRpm + desiredRpm);
   if (diff < 0) {
     diff = -diff;
   }
 
   float out;
-  if (diff < 0.15f) {
+  if (diff < closeRange) {
     out = rpmToThrottle(desiredRpm);
   } else if(currRpm < desiredRpm) {
     out = 1;
@@ -211,30 +255,25 @@ bool highRevNotifying() {
   return false;
 }
 
-bool shouldRevMatch() {
-  // rev match should be done if:
-  // - clutch is pressed
-  // - !revmatching is currently executing more than 2s
-  // - engine temp reached 75C
-
-  // clutch is pressed
-  if (!digitalRead(CLUTCH_DOWN_PIN)) {
+bool revMatching() {
+  if(!shouldRevMatch) {
+    revMatchStartedMillis = NO_REV_MATCH_IN_PROGRESS;
     return false;
   }
 
-  
-  
-  return true;
-}
-
-bool revMatching() {
-  if(!shouldRevMatch) {
-    return false;
+  if (revMatchStartedMillis == NO_REV_MATCH_IN_PROGRESS) {
+    // revmatch just began
+    revMatchStartedMillis = Time::currentTimeMillis();
   }
   
   // TODO:
-  
-  return false;
+
+  // calculate desired gear
+
+  // calculate needed rpm for desired gear and current speed
+
+  // nothing else should be done if already revmatching
+  return true;
 }
 
 bool cruiseControling() {
@@ -256,9 +295,7 @@ bool launchControling() {
 void loop()
 {
 
-  // TODO: OBD READS
-  currRpm = obdRead(PID_RPM);
-  currSpeed = obdRead(PID_SPEED);
+  allReads();
   
   if (gearMonitoring()) {
     return;
