@@ -40,6 +40,8 @@ const float rpmToThrottleFunction[rpmToThrottleN] = {.2f};
 const Int64 NO_REV_MATCH_IN_PROGRESS = Int64(((unsigned long) -1) >> 2, (unsigned long) -1); // maxVal / 2
 const Int64 REV_MATCH_MAX_DURATION = 2000;
 
+const float RPM_SWEET_SPOT = 2500; // minimum value of RPM that will be used for revmatching (if below, lower gear is expected)
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // GLOBALS
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -221,6 +223,8 @@ void rpmSetting(float desiredRpm) {
 int lastGear;
 bool gearMonitoring() {
 
+  // TODO: If cluch play or clutch press are engaged, skip this function
+  
   float currRatio = currRpm / currSpeed;
   int gear = -1;
   for (int i = 0; i < NUM_GEARS; i++) {
@@ -266,12 +270,31 @@ bool revMatching() {
     revMatchStartedMillis = Time::currentTimeMillis();
   }
   
-  // TODO:
+  // calculate desired gear (desired gear should be current gear - 1 (if it's not something is probably not right))
+  int nextGear = 0;
+  float targetRpm = 0;
+  for (int i = NUM_GEARS; i > 0; i--) {
+    targetRpm = GEAR_RATIOS[i-1] * currSpeed;
+    if (targetRpm > RPM_SWEET_SPOT) {
+      nextGear = i;
+      break;
+    }
+  }
 
-  // calculate desired gear
-
-  // calculate needed rpm for desired gear and current speed
-
+  if (nextGear == 0) {
+    // strange, we failed to find appropriate next gear
+    return false;
+  }
+  
+  // fail safe, make sure you are revmatching either to same gear or one gear below
+  if (nextGear != lastGear && nextGear != lastGear - 1 && nextGear) {
+    // downshifting for more than one gear - don't do that!
+    return false;
+  }
+  
+  // do rev matching!
+  rpmSetting(targetRpm);
+  
   // nothing else should be done if already revmatching
   return true;
 }
