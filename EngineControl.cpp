@@ -12,9 +12,6 @@
 const int MAX_THROTTLE_POS = 800;
 const int MIN_THROTTLE_POS = 36;
 
-#define DAC_ADDRESS 0x90
-#define DAC_WRITE_CMD 0x40
-
 void EngineControl::setThrottlePos(int pos) {
 	 Wire.beginTransmission(DAC_ADDRESS);
 	 Wire.write(DAC_WRITE_CMD);

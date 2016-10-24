@@ -11,12 +11,14 @@
 #include "Pins.h"
 
 const int REV_LIMIT = 2500;
-const unsigned long ALARM_HALF_T_MICROS = (500000 / 1500); // 150Hz
+const unsigned long ALARM_HALF_T_MICROS = (500000 / 1500); // 1500Hz (500000 / 1500);
 
 OverrevNotifier::OverrevNotifier() {
 }
 
 void OverrevNotifier::alarmRinging() {
+	static int pulseGen = true;
+
 	unsigned long now = micros();
 
 	if (now < lastTick) {
@@ -26,7 +28,8 @@ void OverrevNotifier::alarmRinging() {
 
 	if (lastTick + ALARM_HALF_T_MICROS <= now) {
 		// whole periode passed
-		digitalWrite(OVERREV_ALARM_PIN, !digitalRead(OVERREV_ALARM_PIN));
+		pulseGen = !pulseGen;
+		digitalWrite(OVERREV_ALARM_PIN, pulseGen);
 		lastTick = now;
 	}
 }
@@ -37,7 +40,7 @@ void OverrevNotifier::highRevNotifying(InputData *input) {
 	     alarmRinging();
 	  } else {
 	    // alarm off
-	    digitalWrite(OVERREV_ALARM_PIN, LOW);
+	    digitalWrite(OVERREV_ALARM_PIN, HIGH);
 	  }
 
 	  // high revs notify doesn't interfere with other co-routines

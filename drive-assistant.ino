@@ -32,28 +32,47 @@ EngineControl engine(&input, &rpmToThrottle);
 RevMatcher revMatcher(&engine);
 OverrevNotifier overrevNotifier;
 
+void beep() {
+
+  bool on = true;
+  
+  for (int i = 0; i < 250; i++) {
+
+    on = ((i % 3) != 0);
+    digitalWrite(OVERREV_ALARM_PIN, !on);
+    delayMicroseconds(1000);
+  }
+  digitalWrite(OVERREV_ALARM_PIN, HIGH);
+  
+}
+
+
 void setup()
 {
-
   pinMode(OVERREV_ALARM_PIN, OUTPUT);
+  digitalWrite(OVERREV_ALARM_PIN, HIGH);
+  
   pinMode(CLUTCH_DOWN_PIN, INPUT);
   pinMode(CLUTCH_PLAY_PIN, INPUT);
   
-  pinMode(TEST_0_PIN, OUTPUT);
+  pinMode(TEST_PIN, OUTPUT);
   pinMode(TEST_IN, INPUT);
   
-  digitalWrite(TEST_0_PIN, HIGH);
+  digitalWrite(TEST_PIN, HIGH);
 
   input.begin();
   Wire.begin();
-  
-  digitalWrite(TEST_0_PIN, LOW);
+
+  beep();
+  delay(200);
+  beep();
+  delay(200);
+  beep();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // LOOP
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 void loop()
 {
 

@@ -38,10 +38,10 @@ bool RevMatcher::shouldRevMatch(InputData *input) {
 		}
 
 		// engine must be warmed-up
-		shouldRevMatch &= (input->engineTemp < 78 || input->engineTemp > 85);
+		shouldRevMatch = shouldRevMatch && (input->engineTemp > 78 && input->engineTemp < 85);
 
-		shouldRevMatch &= (revmatchStartTime > currentTimeMillis);
-		shouldRevMatch &= (revmatchStartTime + REV_MATCH_MAX_DURATION
+		shouldRevMatch = shouldRevMatch && (revmatchStartTime > currentTimeMillis);
+		shouldRevMatch = shouldRevMatch && (revmatchStartTime + REV_MATCH_MAX_DURATION
 				< currentTimeMillis);
 	} else {
 		clutchWasDown = false;
