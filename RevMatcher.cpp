@@ -9,20 +9,26 @@
 #include "Pins.h"
 #include "Timer.h"
 
-const Int64 REV_MATCH_MAX_DURATION(2000);
-const Int64 REV_MATCH_WAIT_TIME(200); // give clutch plate some time to disengage
+#ifdef MOCK_OBD
+	const Int64 REV_MATCH_MAX_DURATION(1000000);
+#else
+	const Int64 REV_MATCH_MAX_DURATION(2000);
+#endif
+
+const Int64 REV_MATCH_START_DELAY(200); // give clutch plate some time to disengage
 const int RPM_SWEET_SPOT = 3000; // always land above 3000 RPM when rev-matching
 const float OVERREV_FACTOR = 1.03f; // always overrev for 3%, because RPM will fall a bit while clutch pedal is traveling
 
 RevMatcher::RevMatcher(EngineControl *_engine) {
 	this->engine = _engine;
 	this->clutchWasDown = false;
+	this->toGear = 0;
 }
 
 bool RevMatcher::shouldRevMatch(InputData *input) {
 
 	// clutch must be pressed
-	bool shouldRevMatch = true;
+	bool shouldRevMatch = false;
 
 	if (input->clutchDown) {
 		// rev match preconditions are met
@@ -30,24 +36,58 @@ bool RevMatcher::shouldRevMatch(InputData *input) {
 		// check timing now (either is rev-match expired or still shouldn't start)
 		Int64 currentTimeMillis = Timer::currentTimeMillis();
 
-		if (!clutchWasDown) {
-			// preconditions weren't met in prev. iteration but are now
-			// which means we should initiate rev match process
+		if (!clutchWasDown || input->forceRevMatch) {
+			initiate(input, currentTimeMillis);
 			clutchWasDown = true;
-			revmatchStartTime = currentTimeMillis + REV_MATCH_WAIT_TIME;
 		}
+
+		shouldRevMatch = toGear > 0;
 
 		// engine must be warmed-up
 		shouldRevMatch = shouldRevMatch && (input->engineTemp > 78 && input->engineTemp < 85);
 
-		shouldRevMatch = shouldRevMatch && (revmatchStartTime > currentTimeMillis);
-		shouldRevMatch = shouldRevMatch && (revmatchStartTime + REV_MATCH_MAX_DURATION
-				< currentTimeMillis);
+		shouldRevMatch = shouldRevMatch && (revmatchStartTime < currentTimeMillis);
+		shouldRevMatch = shouldRevMatch &&
+				(revmatchStartTime + REV_MATCH_MAX_DURATION > currentTimeMillis);
+
 	} else {
 		clutchWasDown = false;
 	}
 
 	return shouldRevMatch;
+}
+
+void RevMatcher::initiate(InputData *input, Int64 currentTimeMillis) {
+	// preconditions weren't met in prev. iteration but are now
+	// which means we should initiate rev match process
+	revmatchStartTime = currentTimeMillis + REV_MATCH_START_DELAY;
+
+	// calculate desired gear (desired gear should be current gear - 1 (if it's not something is probably not right))
+	toGear = 0; // [1-5]
+	for (int i = NUM_GEARS; i > 0; i--) {
+		float targetRpm = GEAR_RATIOS[i - 1] * input->speed;
+		if (targetRpm > RPM_SWEET_SPOT) {
+			toGear = i;
+			break;
+		}
+	}
+
+	if (toGear == 1) {
+		// don't rev-match into first, give up
+		toGear = 0;
+	}
+
+	int lastGear = input->lastGear;
+
+	// fail safe, make sure you are rev-matching to gear below
+	// unless it's force RM, force RM will cause RM anyway
+	if (!input->forceRevMatch && (toGear != lastGear - 1)) {
+		// downshifting for more than one gear - don't do that!
+		toGear = 0;
+	}
+
+	// TODO: Check how reliable is input.lastGear. If it reliable try to shift to lastGear-1(check rpm will be between 3k and 5k)
+	// If it's not reliable, sack checking last gear at all
 }
 
 bool RevMatcher::revMatching(InputData *input) {
@@ -57,34 +97,7 @@ bool RevMatcher::revMatching(InputData *input) {
 		return false;
 	}
 
-	// calculate desired gear (desired gear should be current gear - 1 (if it's not something is probably not right))
-	int nextGear = 0; // [1-5]
-	float targetRpm = 0;
-	for (int i = NUM_GEARS; i > 0; i--) {
-		targetRpm = GEAR_RATIOS[i - 1] * input->speed;
-		if (targetRpm > RPM_SWEET_SPOT) {
-			nextGear = i;
-			break;
-		}
-	}
-
-	if (nextGear == 0) {
-		// strange, we failed to find appropriate next gear
-		engine->giveUpControl();
-		return false;
-	} else if (nextGear == 1) {
-		// don't rev-match into first, keep second gear
-		nextGear = 2;
-	}
-
-	// fail safe, make sure you are rev-matching either to same gear or one gear below
-	int lastGear = input->lastGear;
-
-	if ((nextGear != lastGear) && (nextGear != lastGear - 1)) {
-		// downshifting for more than one gear - don't do that!
-		engine->giveUpControl();
-		return false;
-	}
+	float targetRpm = GEAR_RATIOS[this->toGear] * input->speed;
 
 	// do rev matching if engine isn't in use by somebody else
 	engine->rpmSetting(targetRpm * OVERREV_FACTOR);

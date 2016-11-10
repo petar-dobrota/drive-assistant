@@ -1,5 +1,4 @@
 #include "InputData.h"
-#include "Pins.h"
 
 const float GEAR_RATIO_TOLERANCE = 0.05f; // gear ratio tolerance when determinating in which gear car is
 
@@ -10,7 +9,11 @@ InputData::InputData() {
 	clutchDown = false;
 	clutchPlay = false;
 	gearSelected = false;
+	forceRevMatch = false;
 	lastGear = 1;
+	pids[0] = PID_RPM;
+	pids[1] = PID_SPEED;
+	pids[2] = PID_ENGINE_OIL_TEMP;
 }
 
 bool InputData::begin() {
@@ -55,47 +58,63 @@ void InputData::gearMonitoring() {
 }
 
 #ifdef MOCK_OBD
-	int readInt() {
-		static unsigned char buff[13];
-		Serial.readBytes(buff, 2);
-		return (int) buff[0] + (int) buff[1] * 256;
-	}
+int readInt() {
+	static unsigned char buff[13];
+	Serial.readBytes(buff, 2);
+	return (int) buff[0] + (int) buff[1] * 256;
+}
 
-	bool readBool() {
-		return readInt() != 0;
-	}
+bool readBool() {
+	return readInt() != 0;
+}
 
 #endif
 
+int readObd(COBD &obd, int pid) {
+	bool ok;
+	int value;
+
+	for (int i = 0; i < 7; i++) {
+		ok = obd.readPID(pid, value);
+		if (ok) break;
+	}
+
+	return value;
+}
 void InputData::collect() {
 
 #ifndef MOCK_OBD
-	int value;
-	obd.readPID(PID_RPM, value);
-	rpm = value;
 
-	obd.readPID(PID_SPEED, value);
-	speed = value;
+	this->rpm = readObd(this->obd, PID_RPM);
+	this->speed = readObd(this->obd, PID_SPEED);
+	this->engineTemp = 80;
 
-	obd.readPID(PID_ENGINE_OIL_TEMP, value);
-	engineTemp = value;
+	// TODO: Uncomment code below when piece of shit OBD driver is being fixed
+/*
+	bool success = false;
+
+	for (int i = 0; i < 10 && !success; i++) {
+		int pidReads = obd.readPID(pids, PID_N, p);
+		success = pidReads == PID_N;
+	}
+*/
 
 	clutchDown = false; //digitalRead(CLUTCH_DOWN_PIN);
 
 	// TODO: Read clutch play button
 	clutchPlay = clutchDown;
 
-	// TODO: Add other reads
+	// TODO: Add other reads (ENGINE TEMP)
 
 #else
-	Serial.print("r");
+	Serial.println("r");
 
 	rpm = readInt();
 	speed = readInt();
 	engineTemp = readInt();
 	clutchPlay = readBool();
 	clutchDown = readBool();
-
+	engineTemp = readInt();
 #endif
 
 	gearMonitoring();

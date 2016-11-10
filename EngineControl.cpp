@@ -7,17 +7,21 @@
 #include <Arduino.h>
 #include "EngineControl.h"
 #include "Wire.h"
-#include "Pins.h"
 
-const int MAX_THROTTLE_POS = 800;
-const int MIN_THROTTLE_POS = 36;
+const int MAX_THROTTLE_POS = 205;
+const int MIN_THROTTLE_POS = 39;
 
 void EngineControl::setThrottlePos(int pos) {
-	 Wire.beginTransmission(DAC_ADDRESS);
+	 Wire.beginTransmission(DAC_ADDRESS >> 1);
 	 Wire.write(DAC_WRITE_CMD);
 	 Wire.write(pos);
 	 Wire.endTransmission();
 	 digitalWrite(ENGINE_CTL, HIGH);
+
+#ifdef MOCK_OBD
+	 Serial.print("m");
+	 Serial.println(pos);
+#endif
 }
 
 EngineControl::EngineControl(InputData *input, RpmToThrottleFunction *rpmToThrottle) {
@@ -47,4 +51,8 @@ void EngineControl::rpmSetting(float desiredRpm) {
 
 void EngineControl::giveUpControl() {
 	digitalWrite(ENGINE_CTL, LOW);
+
+#ifdef MOCK_OBD
+	Serial.println("m-");
+#endif
 }

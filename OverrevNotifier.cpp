@@ -10,13 +10,16 @@
 
 #include "Pins.h"
 
-const int REV_LIMIT = 2500;
+const int REV_LIMIT = 4000;
 const unsigned long ALARM_HALF_T_MICROS = (500000 / 1500); // 1500Hz (500000 / 1500);
 
 OverrevNotifier::OverrevNotifier() {
 }
 
 void OverrevNotifier::alarmRinging() {
+	digitalWrite(OVERREV_ALARM_PIN, LOW);
+	return;
+
 	static int pulseGen = true;
 
 	unsigned long now = micros();

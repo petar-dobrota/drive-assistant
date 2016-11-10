@@ -1,10 +1,14 @@
 #pragma once
 
-#define MOCK_OBD
+#include "Pins.h"
+#include "OBD.h"
+
+#define PID_N 3
 
 #ifndef MOCK_OBD
-	#include "OBD.h"
+
 #else
+	#include "SPI.h"
 	#include "Print.h"
 #endif
 
@@ -20,16 +24,18 @@ private:
  
 	void gearMonitoring();
 
+	int p[PID_N];
+	byte pids[PID_N];
 public:
 	
-	float rpm;
-	int speed;
-	int engineTemp;
+	int& rpm = p[0];
+	int& speed = p[1];
+	int& engineTemp = p[2];
 	bool clutchDown;
 	bool clutchPlay;
 	int lastGear;
 	bool gearSelected;
-
+	bool forceRevMatch;
 	InputData();
 	
 	bool begin();

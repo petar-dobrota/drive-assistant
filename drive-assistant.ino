@@ -54,6 +54,7 @@ void setup()
   
   pinMode(CLUTCH_DOWN_PIN, INPUT);
   pinMode(CLUTCH_PLAY_PIN, INPUT);
+  pinMode(ENGINE_CTL, OUTPUT);
   
   pinMode(TEST_PIN, OUTPUT);
   pinMode(TEST_IN, INPUT);
@@ -63,10 +64,6 @@ void setup()
   input.begin();
   Wire.begin();
 
-  beep();
-  delay(200);
-  beep();
-  delay(200);
   beep();
 }
 

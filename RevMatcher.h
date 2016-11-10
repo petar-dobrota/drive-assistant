@@ -16,12 +16,14 @@ class RevMatcher {
 
 private:
 	bool clutchWasDown = false;
+
 	Int64 revmatchStartTime = Int64(0);
+	int toGear;
+
 
 	EngineControl *engine;
-
 	bool shouldRevMatch(InputData *input);
-
+	void initiate(InputData *input, Int64 currentTimeMillis);
 public:
 
 	RevMatcher(EngineControl *e);

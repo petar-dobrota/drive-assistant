@@ -8,6 +8,7 @@
 #ifndef ENGINECONTROL_H_
 #define ENGINECONTROL_H_
 
+#include "Pins.h"
 #include "InputData.h"
 #include "RpmToThrottleFunction.h"
 
@@ -20,9 +21,12 @@ private:
 	InputData *input;
 	RpmToThrottleFunction *rpmToThrottle;
 
-	void setThrottlePos(int pos);
+
 
 public:
+	// TODO: Move to private
+	void setThrottlePos(int pos);
+
 	EngineControl(InputData *input, RpmToThrottleFunction *rpmToThrottle);
 	void rpmSetting(float rpm);
 	// returns throttle pedal control to driver
