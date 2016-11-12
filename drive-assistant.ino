@@ -50,16 +50,16 @@ void beep() {
 void setup()
 {
   pinMode(OVERREV_ALARM_PIN, OUTPUT);
-  digitalWrite(OVERREV_ALARM_PIN, HIGH);
-  
   pinMode(CLUTCH_DOWN_PIN, INPUT);
   pinMode(CLUTCH_PLAY_PIN, INPUT);
+  pinMode(FORCE_RM_PIN, INPUT);
+  pinMode(UNUSED1, INPUT);
   pinMode(ENGINE_CTL, OUTPUT);
-  
-  pinMode(TEST_PIN, OUTPUT);
-  pinMode(TEST_IN, INPUT);
-  
-  digitalWrite(TEST_PIN, HIGH);
+  pinMode(UNUSED2, INPUT);
+  pinMode(UNUSED3, INPUT);
+  pinMode(SD_CS, OUTPUT);
+
+  digitalWrite(OVERREV_ALARM_PIN, HIGH);
 
   input.begin();
   Wire.begin();
