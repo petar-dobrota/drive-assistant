@@ -11,9 +11,10 @@ InputData::InputData() {
 	gearSelected = false;
 	forceRevMatch = false;
 	lastGear = 1;
+	throttlePos = 0;
 	pids[0] = PID_RPM;
 	pids[1] = PID_SPEED;
-	pids[2] = PID_ENGINE_OIL_TEMP;
+	pids[2] = PID_COOLANT_TEMP;
 }
 
 bool InputData::begin() {
@@ -117,5 +118,17 @@ void InputData::collect() {
 	engineTemp = readInt();
 #endif
 
+	// read throttle pos from I2C ADC
+	Wire.beginTransmission(PCF8591);
+	Wire.write(READ_ADC0); // control byte - read ADC0
+	Wire.endTransmission();
+	Wire.requestFrom(PCF8591, 2);
+	throttlePos = Wire.read();
+
+
 	gearMonitoring();
+}
+
+bool InputData::breakRevMatch() {
+	return this->throttlePos > 130;
 }
