@@ -12,16 +12,19 @@ FunctionRecorder::FunctionRecorder() {
 }
 
 void FunctionRecorder::begin() {
-	while (!log.begin(SD_CS));
+#ifndef DONT_WRITE_SD
+	while (!log.begin(SD_CS))
+	;
 	delay(500);
 	File f = log.startLogging();
 	f.print("time\tapp\trpm\n");
 	f.close();
+#endif
 }
 
 void FunctionRecorder::logData(int throttlePos, int rpm) {
 	// time app rpm
-
+#ifndef DONT_WRITE_SD
 	File f = log.startLogging();
 	f.print(millis());
 	f.print('\t');
@@ -30,6 +33,7 @@ void FunctionRecorder::logData(int throttlePos, int rpm) {
 	f.print(rpm);
 	f.print('\n');
 	f.close();
+#endif
 }
 
 bool FunctionRecorder::delaying(long delay) {
@@ -57,14 +61,59 @@ bool FunctionRecorder::isStoped() {
 	return direction == 0;
 }
 
+bool FunctionRecorder::alterMagicSequence(bool inp) {
+	static int step = 0;
+	static unsigned long lastTick = 0;
+
+	unsigned long timeNow = millis();
+	bool oddStep = (step % 2) == 1;
+
+	if (inp == oddStep) {
+		if (timeNow > lastTick + 1500) {
+			// step taking too long - reset sequence
+			step = 0;
+			return false;
+		}
+	} else {
+		if (timeNow > lastTick + 200) {
+			step++;
+			lastTick = timeNow;
+		}
+	}
+
+	if (step == 6) {
+		step = 0;
+		return true;
+	} else {
+		return false;
+	}
+
+}
+
 bool FunctionRecorder::recording(InputData *in, EngineControl *engine) {
 
-	if (isStoped()) return false;
+	static bool magicSequenceCompleted = false;
+
+	if (!magicSequenceCompleted) {
+		if (!alterMagicSequence(in->breakRevMatch())) {
+			return false;
+		}
+
+		if (in->clutchDown) {
+			magicSequenceCompleted = true;
+		} else {
+			return false;
+		}
+	}
+
+	if (isStoped())
+		return false;
 
 	int throttle = F_REC_MIN_THROTTLE + (int) (F_REC_STEP * i + 0.5f);
 	engine->setThrottlePos(throttle);
 
-	if (delaying(500)) return true;
+	if (delaying(500))
+		return true;
 
 	in->collect();
 	logData(throttle, in->rpm);

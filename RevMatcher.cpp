@@ -25,9 +25,13 @@ RevMatcher::RevMatcher(EngineControl *_engine) {
 	this->toGear = 0;
 }
 
+void RevMatcher::breakRevMatch() {
+	this->toGear = 0;
+	this->engine->giveUpControl();
+}
+
 bool RevMatcher::shouldRevMatch(InputData *input) {
 
-	// clutch must be pressed
 	bool shouldRevMatch = false;
 
 	if (input->clutchDown) {
@@ -41,17 +45,25 @@ bool RevMatcher::shouldRevMatch(InputData *input) {
 			clutchWasDown = true;
 		}
 
-		shouldRevMatch = toGear > 0;
+		shouldRevMatch = !input->breakRevMatch();
+		shouldRevMatch = shouldRevMatch && toGear > 0;
 
 		// engine must be warmed-up
 		shouldRevMatch = shouldRevMatch && (input->engineTemp > 78 && input->engineTemp < 85);
 
+		// if some of check above failed, means we shouldn't rev match in this clutch press cycle
+		if (!shouldRevMatch) {
+			breakRevMatch();
+		}
+
+		// check only whether is right time to RevMatch, if it's not, no need for breakRevMatch
 		shouldRevMatch = shouldRevMatch && (revmatchStartTime < currentTimeMillis);
 		shouldRevMatch = shouldRevMatch &&
 				(revmatchStartTime + REV_MATCH_MAX_DURATION > currentTimeMillis);
 
 	} else {
 		clutchWasDown = false;
+		breakRevMatch();
 	}
 
 	return shouldRevMatch;

@@ -125,6 +125,10 @@ void InputData::collect() {
 	Wire.requestFrom(PCF8591, 2);
 	throttlePos = Wire.read();
 
+#ifdef MOCK_OBD
+	 Serial.print("tp");
+	 Serial.println(throttlePos);
+#endif
 
 	gearMonitoring();
 }

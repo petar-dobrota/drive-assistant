@@ -23,6 +23,7 @@ private:
 
 	EngineControl *engine;
 	bool shouldRevMatch(InputData *input);
+	void breakRevMatch();
 	void initiate(InputData *input, Int64 currentTimeMillis);
 public:
 

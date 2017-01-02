@@ -8,6 +8,8 @@
 #ifndef DRIVE_ASSISTANT_FUNCTIONRECORDER_H_
 #define DRIVE_ASSISTANT_FUNCTIONRECORDER_H_
 
+#define DONT_WRITE_SD
+
 #include <DataLogger.h>
 #include "Pins.h"
 #include "InputData.h"
@@ -24,7 +26,10 @@
 class FunctionRecorder {
 
 private:
+
+#ifndef DONT_WRITE_SD
 	DataLogger log;
+#endif
 
 	int i = 0;
 	int direction = 1;
@@ -33,6 +38,8 @@ private:
 	bool delaying(long delay);
 	void stop(EngineControl *engine);
 	bool isStoped();
+
+	bool alterMagicSequence(bool inp);
 public:
 	FunctionRecorder();
 	void begin();
