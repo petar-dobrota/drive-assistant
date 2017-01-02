@@ -7,40 +7,81 @@
 
 #include "FunctionRecorder.h"
 
-const int n = 30;
-
 FunctionRecorder::FunctionRecorder() {
 
 }
 
 void FunctionRecorder::begin() {
-	log.begin(13);
+	while (!log.begin(SD_CS));
+	delay(500);
+	File f = log.startLogging();
+	f.print("time\tapp\trpm\n");
+	f.close();
 }
 
-void FunctionRecorder::record(COBD *obd, EngineControl *engine) {
+void FunctionRecorder::logData(int throttlePos, int rpm) {
+	// time app rpm
 
-	int minT = 39;
-	int maxT = 100; // TODO: Probably: 205;
+	File f = log.startLogging();
+	f.print(millis());
+	f.print('\t');
+	f.print(throttlePos);
+	f.print('\t');
+	f.print(rpm);
+	f.print('\n');
+	f.close();
+}
 
-	float step = (float) (maxT - minT) / n;
-	int i = 0;
-	int direction = 1;
-	while(true) {
+bool FunctionRecorder::delaying(long delay) {
+	static Int64 delayEnd = Int64(-1);
 
-		int throttle = minT + (int) (step * i + 0.5f);
-		engine->setThrottlePos(throttle);
-		delay(500);
-		int rpm;
-		obd->readPID(PID_RPM, rpm);
-		logData(throttle, rpm);
-
-		i += direction;
-		if (i > n) {
-			// reached one end, go back
-			direction = direction * -1;
-		} else if (i < 0) {
-			// reached beginning, do one iteration for now -> break
-			break;
-		}
+	Int64 currTime = Timer::currentTimeMillis();
+	if (delayEnd < 0) {
+		delayEnd = currTime + Int64(delay);
 	}
+
+	if (currTime >= delayEnd) {
+		delayEnd = Int64(-1);
+		return false;
+	} else {
+		return true;
+	}
+}
+
+void FunctionRecorder::stop(EngineControl *engine) {
+	direction = 0;
+	engine->giveUpControl();
+}
+
+bool FunctionRecorder::isStoped() {
+	return direction == 0;
+}
+
+bool FunctionRecorder::recording(InputData *in, EngineControl *engine) {
+
+	if (isStoped()) return false;
+
+	int throttle = F_REC_MIN_THROTTLE + (int) (F_REC_STEP * i + 0.5f);
+	engine->setThrottlePos(throttle);
+
+	if (delaying(500)) return true;
+
+	in->collect();
+	logData(throttle, in->rpm);
+
+	if (in->breakRevMatch()) {
+		stop(engine);
+		return false;
+	}
+
+	i += direction;
+	if (i > F_REC_RESOLUTION) {
+		// reached one end, go back
+		direction = direction * -1;
+	} else if (i < 0) {
+		// reached beginning, do one iteration for now -> break
+		stop(engine);
+		return false;
+	}
+
 }

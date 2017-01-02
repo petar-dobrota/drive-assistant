@@ -10,19 +10,33 @@
 
 #include <DataLogger.h>
 #include "Pins.h"
-#include <OBD.h>
+#include "InputData.h"
 #include "EngineControl.h"
+#include "Timer.h"
 
+#define F_REC_MIN_THROTTLE 39
+// TODO: probably 205
+#define F_REC_MAX_THROTTLE 100
+
+#define F_REC_RESOLUTION 30
+
+#define F_REC_STEP ((float)(((float) F_REC_MAX_THROTTLE - F_REC_MIN_THROTTLE) / (float) F_REC_RESOLUTION))
 class FunctionRecorder {
 
 private:
 	DataLogger log;
 
+	int i = 0;
+	int direction = 1;
+
 	void logData(int throttlePos, int rpm);
+	bool delaying(long delay);
+	void stop(EngineControl *engine);
+	bool isStoped();
 public:
 	FunctionRecorder();
 	void begin();
-	void record(COBD *obd, EngineControl *engine);
+	bool recording(InputData *in, EngineControl *engine);
 
 };
 
