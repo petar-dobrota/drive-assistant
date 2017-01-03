@@ -12,28 +12,21 @@ FunctionRecorder::FunctionRecorder() {
 }
 
 void FunctionRecorder::begin() {
-#ifndef DONT_WRITE_SD
-	while (!log.begin(SD_CS))
-	;
-	delay(500);
-	File f = log.startLogging();
-	f.print("time\tapp\trpm\n");
-	f.close();
-#endif
+
 }
 
 void FunctionRecorder::logData(int throttlePos, int rpm) {
-	// time app rpm
-#ifndef DONT_WRITE_SD
-	File f = log.startLogging();
-	f.print(millis());
-	f.print('\t');
-	f.print(throttlePos);
-	f.print('\t');
-	f.print(rpm);
-	f.print('\n');
-	f.close();
-#endif
+
+	Wire.beginTransmission(8);
+
+	Wire.print(millis());
+	Wire.print('\t');
+	Wire.print(throttlePos);
+	Wire.print('\t');
+	Wire.print(rpm);
+	Wire.print('\n');
+
+	Wire.endTransmission();
 }
 
 bool FunctionRecorder::delaying(long delay) {

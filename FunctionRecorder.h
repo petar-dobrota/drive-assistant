@@ -15,6 +15,7 @@
 #include "InputData.h"
 #include "EngineControl.h"
 #include "Timer.h"
+#include "Wire.h"
 
 #define F_REC_MIN_THROTTLE 39
 // TODO: probably 205
@@ -28,7 +29,7 @@ class FunctionRecorder {
 private:
 
 #ifndef DONT_WRITE_SD
-	DataLogger log;
+//	DataLogger log;
 #endif
 
 	int i = 0;
