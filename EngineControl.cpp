@@ -6,17 +6,13 @@
  */
 #include <Arduino.h>
 #include "EngineControl.h"
-#include "Wire.h"
 
 const int MAX_THROTTLE_POS = 205;
 const int MIN_THROTTLE_POS = 39;
 
 void EngineControl::setThrottlePos(int pos) {
-	 Wire.beginTransmission(DAC_ADDRESS >> 1);
-	 Wire.write(DAC_WRITE_CMD);
-	 Wire.write(pos);
-	 Wire.endTransmission();
-	 digitalWrite(ENGINE_CTL, HIGH);
+	DacConv::setOutput(pos);
+	digitalWrite(ENGINE_CTL, HIGH);
 
 #ifdef MOCK_OBD
 	 Serial.print("m");

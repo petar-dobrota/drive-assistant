@@ -37,7 +37,7 @@ void InputData::gearMonitoring() {
 		return;
 	}
 
-	float currRatio = rpm / speed;
+	float currRatio = rpm / (float) speed;
 	int gear = -1;
 
 	for (int i = 0; i < NUM_GEARS; i++) {
@@ -119,11 +119,7 @@ void InputData::collect() {
 #endif
 
 	// read throttle pos from I2C ADC
-	Wire.beginTransmission(PCF8591);
-	Wire.write(READ_ADC0); // control byte - read ADC0
-	Wire.endTransmission();
-	Wire.requestFrom(PCF8591, 2);
-	throttlePos = Wire.read();
+	throttlePos = DacConv::getInput();
 
 #ifdef MOCK_OBD
 	 Serial.print("tp");

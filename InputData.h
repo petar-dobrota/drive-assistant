@@ -2,11 +2,9 @@
 
 #include "Pins.h"
 #include "OBD.h"
-#include <Wire.h>
+#include "DacConv.h"
 
 #define PID_N 3
-#define READ_ADC0 0x00
-#define PCF8591 (0x90 >> 1)
 
 #ifndef MOCK_OBD
 

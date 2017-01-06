@@ -11,9 +11,7 @@
 #include "Pins.h"
 #include "InputData.h"
 #include "RpmToThrottleFunction.h"
-
-#define DAC_ADDRESS 0x90
-#define DAC_WRITE_CMD 0x40
+#include "DacConv.h"
 
 class EngineControl {
 private:
