@@ -109,7 +109,7 @@ bool RevMatcher::revMatching(InputData *input) {
 		return false;
 	}
 
-	float targetRpm = GEAR_RATIOS[this->toGear] * input->speed;
+	float targetRpm = GEAR_RATIOS[this->toGear - 1] * input->speed;
 
 	// do rev matching if engine isn't in use by somebody else
 	engine->rpmSetting(targetRpm * OVERREV_FACTOR);
