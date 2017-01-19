@@ -6,8 +6,6 @@
  */
 
 #include "RevMatcher.h"
-#include "Pins.h"
-#include "Timer.h"
 
 #ifdef MOCK_OBD
 	const Int64 REV_MATCH_MAX_DURATION(1000000);
@@ -30,26 +28,23 @@ void RevMatcher::breakRevMatch() {
 	this->engine->giveUpControl();
 }
 
-bool RevMatcher::shouldRevMatch(InputData *input) {
+bool RevMatcher::shouldRevMatch() {
 
 	bool shouldRevMatch = false;
 
-	if (input->clutchDown) {
+	if (InputData::clutchDown) {
 		// rev match preconditions are met
 
-		// check timing now (either is rev-match expired or still shouldn't start)
-		Int64 currentTimeMillis = Timer::currentTimeMillis();
-
-		if (!clutchWasDown || input->forceRevMatch) {
-			initiate(input, currentTimeMillis);
+		if (!clutchWasDown || InputData::forceRevMatch) {
+			initiate();
 			clutchWasDown = true;
 		}
 
-		shouldRevMatch = !input->breakRevMatch();
+		shouldRevMatch = !InputData::breakRevMatch();
 		shouldRevMatch = shouldRevMatch && toGear > 0;
 
 		// engine must be warmed-up
-		shouldRevMatch = shouldRevMatch && (input->engineTemp > 78 && input->engineTemp < 85);
+		shouldRevMatch = shouldRevMatch && (InputData::engineTemp > 78 && InputData::engineTemp < 85);
 
 		// if some of check above failed, means we shouldn't rev match in this clutch press cycle
 		if (!shouldRevMatch) {
@@ -57,9 +52,9 @@ bool RevMatcher::shouldRevMatch(InputData *input) {
 		}
 
 		// check only whether is right time to RevMatch, if it's not, no need for breakRevMatch
-		shouldRevMatch = shouldRevMatch && (revmatchStartTime < currentTimeMillis);
+		shouldRevMatch = shouldRevMatch && (revmatchStartTime < InputData::currentTimeMillis);
 		shouldRevMatch = shouldRevMatch &&
-				(revmatchStartTime + REV_MATCH_MAX_DURATION > currentTimeMillis);
+				(revmatchStartTime + REV_MATCH_MAX_DURATION > InputData::currentTimeMillis);
 
 	} else {
 		clutchWasDown = false;
@@ -69,15 +64,15 @@ bool RevMatcher::shouldRevMatch(InputData *input) {
 	return shouldRevMatch;
 }
 
-void RevMatcher::initiate(InputData *input, Int64 currentTimeMillis) {
+void RevMatcher::initiate() {
 	// preconditions weren't met in prev. iteration but are now
 	// which means we should initiate rev match process
-	revmatchStartTime = currentTimeMillis + REV_MATCH_START_DELAY;
+	revmatchStartTime = InputData::currentTimeMillis + REV_MATCH_START_DELAY;
 
 	// calculate desired gear (desired gear should be current gear - 1 (if it's not something is probably not right))
 	toGear = 0; // [1-5]
 	for (int i = NUM_GEARS; i > 0; i--) {
-		float targetRpm = GEAR_RATIOS[i - 1] * input->speed;
+		float targetRpm = GEAR_RATIOS[i - 1] * InputData::speed;
 		if (targetRpm > RPM_SWEET_SPOT) {
 			toGear = i;
 			break;
@@ -89,11 +84,11 @@ void RevMatcher::initiate(InputData *input, Int64 currentTimeMillis) {
 		toGear = 0;
 	}
 
-	int lastGear = input->lastGear;
+	int lastGear = InputData::lastGear;
 
 	// fail safe, make sure you are rev-matching to gear below
 	// unless it's force RM, force RM will cause RM anyway
-	if (!input->forceRevMatch && (toGear != lastGear - 1)) {
+	if (!InputData::forceRevMatch && (toGear != lastGear - 1)) {
 		// downshifting for more than one gear - don't do that!
 		toGear = 0;
 	}
@@ -102,14 +97,14 @@ void RevMatcher::initiate(InputData *input, Int64 currentTimeMillis) {
 	// If it's not reliable, sack checking last gear at all
 }
 
-bool RevMatcher::revMatching(InputData *input) {
+bool RevMatcher::revMatching() {
 
-	if (!shouldRevMatch(input)) {
+	if (!shouldRevMatch()) {
 		engine->giveUpControl();
 		return false;
 	}
 
-	float targetRpm = GEAR_RATIOS[this->toGear - 1] * input->speed;
+	float targetRpm = GEAR_RATIOS[this->toGear - 1] * InputData::speed;
 
 	// do rev matching if engine isn't in use by somebody else
 	engine->rpmSetting(targetRpm * OVERREV_FACTOR);

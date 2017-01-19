@@ -1,5 +1,7 @@
 #include "RpmToThrottleFunction.h"
 
+namespace RpmToThrottleFunction {
+
 const int rpmToThrottleDomain = 6000;
 const int rpmToThrottleN = 78;
 // TODO: add actual data
@@ -11,7 +13,7 @@ const int rpmToThrottleFunction[rpmToThrottleN] = { 0, 2, 4, 6, 8, 10, 12, 14,
 		146, 148, 150, 152, 154 };
 
 // Determinates how much pressure throttle pedal needs to reach specified RPM when engine isn't loaded.
-int RpmToThrottleFunction::getThrottle(float rpm) {
+int getThrottle(float rpm) {
 	// rpm on X, throttle on Y
 
 	float xStep = (float) rpmToThrottleDomain / rpmToThrottleN;
@@ -29,4 +31,6 @@ int RpmToThrottleFunction::getThrottle(float rpm) {
 		// desired rpm is way to high, probably error, return 0 to not overrev the engine
 		return 0;
 	}
+}
+
 }

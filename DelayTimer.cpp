@@ -11,8 +11,8 @@ DelayTimer::DelayTimer() {
 	this->delayEnd = Int64(-1);
 }
 
-bool DelayTimer::delaying(int delay) {
-	Int64 currTime = Timer::currentTimeMillis();
+bool DelayTimer::delaying(int delay, Int64 &currTime) {
+
 	if (delayEnd < 0) {
 		delayEnd = currTime + Int64(delay);
 	}

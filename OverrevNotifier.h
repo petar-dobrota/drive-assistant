@@ -8,16 +8,15 @@
 #ifndef OVERREVNOTIFIER_OVERREVNOTIFIER_H_
 #define OVERREVNOTIFIER_OVERREVNOTIFIER_H_
 
+#include "Pins.h"
 #include "InputData.h"
 
 class OverrevNotifier {
 private:
-	unsigned long lastTick = 0;
 
-	void alarmRinging();
 public:
 	OverrevNotifier();
-	void highRevNotifying(InputData *input);
+	void highRevNotifying();
 };
 
 #endif /* OVERREVNOTIFIER_OVERREVNOTIFIER_H_ */

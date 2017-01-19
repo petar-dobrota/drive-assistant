@@ -8,14 +8,14 @@
 #ifndef DRIVE_ASSISTANT_DELAYTIMER_H_
 #define DRIVE_ASSISTANT_DELAYTIMER_H_
 
-#include "Timer.h"
+#include "Int64.h"
 
 class DelayTimer {
 private:
 	Int64 delayEnd;
 public:
 	DelayTimer();
-	bool delaying(int delay);
+	bool delaying(int delay, Int64 &currTime);
 };
 
 #endif /* DRIVE_ASSISTANT_DELAYTIMER_H_ */

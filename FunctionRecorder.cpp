@@ -87,16 +87,16 @@ bool FunctionRecorder::alterMagicSequence(bool inp) {
 
 }
 
-bool FunctionRecorder::recording(InputData *in, EngineControl *engine) {
+bool FunctionRecorder::recording(EngineControl *engine) {
 
 	static bool magicSequenceCompleted = false;
 
 	if (!magicSequenceCompleted) {
-		if (!alterMagicSequence(in->breakRevMatch())) {
+		if (!alterMagicSequence(InputData::breakRevMatch())) {
 			return false;
 		}
 
-		if (in->clutchDown) {
+		if (InputData::clutchDown) {
 			magicSequenceCompleted = true;
 		} else {
 			return false;
@@ -109,17 +109,17 @@ bool FunctionRecorder::recording(InputData *in, EngineControl *engine) {
 	int throttle = F_REC_MIN_THROTTLE + (int) (F_REC_STEP * i + 0.5f);
 	engine->setThrottlePos(throttle);
 
-	if (in->breakRevMatch()) {
+	if (InputData::breakRevMatch()) {
 		stop(engine);
 		return false;
 	}
 
 	static DelayTimer d;
-	if (d.delaying(1400)) {
+	if (d.delaying(1400, InputData::currentTimeMillis)) {
 		return true;
 	}
 
-	logData(throttle, in->rpm);
+	logData(throttle, InputData::rpm);
 
 	i += direction;
 	if (i > F_REC_RESOLUTION) {

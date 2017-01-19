@@ -10,7 +10,8 @@
 
 #include "EngineControl.h"
 #include "InputData.h"
-#include "Timer.h"
+#include "Pins.h"
+#include "Int64.h"
 
 class RevMatcher {
 
@@ -22,14 +23,14 @@ private:
 
 
 	EngineControl *engine;
-	bool shouldRevMatch(InputData *input);
+	bool shouldRevMatch();
 	void breakRevMatch();
-	void initiate(InputData *input, Int64 currentTimeMillis);
+	void initiate();
 public:
 
 	RevMatcher(EngineControl *e);
 
-	bool revMatching(InputData *input);
+	bool revMatching();
 
 };
 

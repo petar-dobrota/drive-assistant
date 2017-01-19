@@ -7,7 +7,9 @@
 #ifndef DRIVE_ASSISTANT_DEBOUNCE_H_
 #define DRIVE_ASSISTANT_DEBOUNCE_H_
 
+#include "Timer.h"
 #include "Int64.h"
+#include <Arduino.h>
 
 class Debounce {
 

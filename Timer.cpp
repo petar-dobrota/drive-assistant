@@ -1,4 +1,3 @@
-#include <Arduino.h>
 #include "Timer.h"
 
 long Timer::numOverflows = 0;

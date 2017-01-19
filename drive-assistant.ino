@@ -2,12 +2,10 @@
 #include <Wire.h>
 #include <OBD.h>
 #include "Int64.h"
-#include "Timer.h"
 
 #include "pins.h"
 #include "InputData.h"
 
-#include "RpmToThrottleFunction.h"
 #include "RevMatcher.h"
 #include "OverrevNotifier.h"
 
@@ -28,27 +26,16 @@ const float GEAR_RATIOS[5] =
 // GLOBALS
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-Timer time;
-InputData input;
-RpmToThrottleFunction rpmToThrottle;
-EngineControl engine(&input, &rpmToThrottle);
+EngineControl engine;
 RevMatcher revMatcher(&engine);
 OverrevNotifier overrevNotifier;
 
 FunctionRecorder rec;
 
 void beep() {
-
-	bool on = true;
-
-	for (int i = 0; i < 250; i++) {
-
-		on = ((i % 3) != 0);
-		digitalWrite(OVERREV_ALARM_PIN, !on);
-		delayMicroseconds(1000);
-	}
+	digitalWrite(OVERREV_ALARM_PIN, LOW);
+	delay(120);
 	digitalWrite(OVERREV_ALARM_PIN, HIGH);
-
 }
 
 void setup() {
@@ -64,7 +51,7 @@ void setup() {
 
 	digitalWrite(OVERREV_ALARM_PIN, HIGH);
 
-	input.begin();
+	InputData::begin();
 	Wire.begin();
 
 	rec.begin();
@@ -80,11 +67,11 @@ void setup() {
 
 void loop() {
 
-	input.collect();
+	InputData::collect();
 
-	overrevNotifier.highRevNotifying(&input);
+	overrevNotifier.highRevNotifying();
 
-	if (rec.recording(&input, &engine)) {
+	if (rec.recording(&engine)) {
 		return;
 	}
 
@@ -93,14 +80,14 @@ void loop() {
 
 	Wire.print(millis());
 	Wire.print('\t');
-	Wire.print(input.throttlePos);
+	Wire.print(InputData::throttlePos);
 	Wire.print('\t');
-	Wire.print(input.rpm);
+	Wire.print(InputData::rpm);
 	Wire.print('\n');
 
 	Wire.endTransmission();
 #endif
-	if (revMatcher.revMatching(&input)) {
+	if (revMatcher.revMatching()) {
 		return;
 	}
 

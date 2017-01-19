@@ -12,7 +12,6 @@
 #include "Pins.h"
 #include "InputData.h"
 #include "EngineControl.h"
-#include "Timer.h"
 #include "Wire.h"
 #include "DelayTimer.h"
 #include <EEPROM.h>
@@ -49,7 +48,7 @@ private:
 public:
 	FunctionRecorder();
 	void begin();
-	bool recording(InputData *in, EngineControl *engine);
+	bool recording(EngineControl *engine);
 
 };
 

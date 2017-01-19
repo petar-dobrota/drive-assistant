@@ -1,7 +1,5 @@
 #pragma once
 
-class RpmToThrottleFunction {
-	
-public:
+namespace RpmToThrottleFunction {
 	int getThrottle(float rpm);
-};
+}
