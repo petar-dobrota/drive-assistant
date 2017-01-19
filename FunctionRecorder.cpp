@@ -42,22 +42,6 @@ void FunctionRecorder::logData(int throttlePos, int rpm) {
 
 }
 
-bool FunctionRecorder::delaying(long delay) {
-	static Int64 delayEnd = Int64(-1);
-
-	Int64 currTime = Timer::currentTimeMillis();
-	if (delayEnd < 0) {
-		delayEnd = currTime + Int64(delay);
-	}
-
-	if (currTime >= delayEnd) {
-		delayEnd = Int64(-1);
-		return false;
-	} else {
-		return true;
-	}
-}
-
 void FunctionRecorder::stop(EngineControl *engine) {
 	direction = 0;
 	engine->giveUpControl();
@@ -68,14 +52,21 @@ bool FunctionRecorder::isStoped() {
 }
 
 bool FunctionRecorder::alterMagicSequence(bool inp) {
+
+	unsigned long timeNow = millis();
+
 	static int step = 0;
 	static unsigned long lastTick = 0;
 
-	unsigned long timeNow = millis();
+	// wait a bit to let things settle after step change.
+	if (timeNow < lastTick + 50) {
+		return false;
+	}
+
 	bool oddStep = (step % 2) == 1;
 
 	if (inp == oddStep) {
-		if (timeNow > lastTick + 1500) {
+		if (timeNow > lastTick + 2500) {
 			// step taking too long - reset sequence
 			step = 0;
 			return false;
@@ -123,8 +114,10 @@ bool FunctionRecorder::recording(InputData *in, EngineControl *engine) {
 		return false;
 	}
 
-	if (delaying(1400))
+	static DelayTimer d;
+	if (d.delaying(1400)) {
 		return true;
+	}
 
 	logData(throttle, in->rpm);
 

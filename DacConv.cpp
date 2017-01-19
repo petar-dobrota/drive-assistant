@@ -20,10 +20,12 @@ void setOutput(unsigned outp) {
 }
 
 unsigned getInput() {
-	Wire.beginTransmission(DAC_ADDRESS);
-	Wire.write(DAC_CMD);
-	Wire.write(output); // just write last output again
-	Wire.endTransmission();
+	/*  Not needed probably:
+	 Wire.beginTransmission(DAC_ADDRESS);
+	 Wire.write(DAC_CMD);
+	 Wire.write(output); // just write last output again
+	 Wire.endTransmission(); */
+
 	Wire.requestFrom(DAC_ADDRESS, 2);
 	return Wire.read();
 }

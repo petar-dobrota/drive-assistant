@@ -14,6 +14,7 @@
 #include "EngineControl.h"
 #include "Timer.h"
 #include "Wire.h"
+#include "DelayTimer.h"
 #include <EEPROM.h>
 
 #define F_REC_MIN_THROTTLE 50
@@ -41,7 +42,6 @@ private:
 	int direction = 1;
 
 	void logData(int throttlePos, int rpm);
-	bool delaying(long delay);
 	void stop(EngineControl *engine);
 	bool isStoped();
 
