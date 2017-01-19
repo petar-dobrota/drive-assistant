@@ -10,6 +10,7 @@
 #include "OverrevNotifier.h"
 
 #include "FunctionRecorder.h"
+#include "I2CLogger.h"
 
 // obd adapter pinout:
 // rx - white
@@ -40,30 +41,28 @@ void beep() {
 
 void setup() {
 	pinMode(OVERREV_ALARM_PIN, OUTPUT);
+	digitalWrite(OVERREV_ALARM_PIN, HIGH); // HIGH means OFF
 	pinMode(CLUTCH_DOWN_PIN, INPUT);
 	pinMode(CLUTCH_PLAY_PIN, INPUT);
 	pinMode(FORCE_RM_PIN, INPUT);
+	digitalWrite(FORCE_RM_PIN, LOW); // LOW means let original app signal pass
 	pinMode(UNUSED1, INPUT);
 	pinMode(ENGINE_CTL, OUTPUT);
 	pinMode(UNUSED2, INPUT);
 	pinMode(UNUSED3, INPUT);
 	pinMode(SD_CS, OUTPUT);
 
-	digitalWrite(OVERREV_ALARM_PIN, HIGH);
-
 	InputData::begin();
 	Wire.begin();
-
 	rec.begin();
 
+	// signal setup complete
 	beep();
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // LOOP
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 
 void loop() {
 
@@ -75,18 +74,8 @@ void loop() {
 		return;
 	}
 
-#ifndef DONT_WRITE_LOG
-	Wire.beginTransmission(8);
-
-	Wire.print(millis());
-	Wire.print('\t');
-	Wire.print(InputData::throttlePos);
-	Wire.print('\t');
-	Wire.print(InputData::rpm);
-	Wire.print('\n');
-
-	Wire.endTransmission();
-#endif
+	I2CLogger::logThrottleToRpm();
+	
 	if (revMatcher.revMatching()) {
 		return;
 	}

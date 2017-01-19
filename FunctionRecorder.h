@@ -14,6 +14,7 @@
 #include "EngineControl.h"
 #include "Wire.h"
 #include "DelayTimer.h"
+#include "I2CLogger.h"
 #include <EEPROM.h>
 
 #define F_REC_MIN_THROTTLE 50

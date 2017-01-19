@@ -17,19 +17,7 @@ void FunctionRecorder::begin() {
 
 void FunctionRecorder::logData(int throttlePos, int rpm) {
 
-#ifndef DONT_WRITE_LOG
-
-	Wire.beginTransmission(8);
-
-	Wire.print(millis());
-	Wire.print('\t');
-	Wire.print(throttlePos);
-	Wire.print('\t');
-	Wire.print(rpm);
-	Wire.print('\n');
-
-	Wire.endTransmission();
-#endif
+	I2CLogger::logThrottleToRpm();
 
 	static int currAddr = 0;
 
