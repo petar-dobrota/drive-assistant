@@ -17,6 +17,8 @@ void FunctionRecorder::begin() {
 
 void FunctionRecorder::logData(int throttlePos, int rpm) {
 
+#ifndef DONT_WRITE_LOG
+
 	Wire.beginTransmission(8);
 
 	Wire.print(millis());
@@ -27,6 +29,17 @@ void FunctionRecorder::logData(int throttlePos, int rpm) {
 	Wire.print('\n');
 
 	Wire.endTransmission();
+#endif
+
+	static int currAddr = 0;
+
+	RpmThrottle point;
+	point.rpm = rpm;
+	point.throttlePos = throttlePos;
+
+	EEPROM.put(currAddr, point);
+	currAddr+=sizeof(RpmThrottle);
+
 }
 
 bool FunctionRecorder::delaying(long delay) {
@@ -105,16 +118,15 @@ bool FunctionRecorder::recording(InputData *in, EngineControl *engine) {
 	int throttle = F_REC_MIN_THROTTLE + (int) (F_REC_STEP * i + 0.5f);
 	engine->setThrottlePos(throttle);
 
-	if (delaying(500))
-		return true;
-
-	in->collect();
-	logData(throttle, in->rpm);
-
 	if (in->breakRevMatch()) {
 		stop(engine);
 		return false;
 	}
+
+	if (delaying(1400))
+		return true;
+
+	logData(throttle, in->rpm);
 
 	i += direction;
 	if (i > F_REC_RESOLUTION) {

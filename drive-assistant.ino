@@ -88,6 +88,18 @@ void loop() {
 		return;
 	}
 
+#ifndef DONT_WRITE_LOG
+	Wire.beginTransmission(8);
+
+	Wire.print(millis());
+	Wire.print('\t');
+	Wire.print(input.throttlePos);
+	Wire.print('\t');
+	Wire.print(input.rpm);
+	Wire.print('\n');
+
+	Wire.endTransmission();
+#endif
 	if (revMatcher.revMatching(&input)) {
 		return;
 	}

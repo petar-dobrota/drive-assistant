@@ -8,22 +8,27 @@
 #ifndef DRIVE_ASSISTANT_FUNCTIONRECORDER_H_
 #define DRIVE_ASSISTANT_FUNCTIONRECORDER_H_
 
-#define DONT_WRITE_SD
-
 #include <DataLogger.h>
 #include "Pins.h"
 #include "InputData.h"
 #include "EngineControl.h"
 #include "Timer.h"
 #include "Wire.h"
+#include <EEPROM.h>
 
-#define F_REC_MIN_THROTTLE 39
+#define F_REC_MIN_THROTTLE 50
 // TODO: probably 205
-#define F_REC_MAX_THROTTLE 100
+#define F_REC_MAX_THROTTLE 76
 
-#define F_REC_RESOLUTION 30
+#define F_REC_RESOLUTION 20
 
 #define F_REC_STEP ((float)(((float) F_REC_MAX_THROTTLE - F_REC_MIN_THROTTLE) / (float) F_REC_RESOLUTION))
+
+struct RpmThrottle {
+	int rpm;
+	unsigned char throttlePos;
+};
+
 class FunctionRecorder {
 
 private:

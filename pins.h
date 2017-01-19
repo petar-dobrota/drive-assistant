@@ -1,6 +1,7 @@
 #pragma once
 
-#define MOCK_OBD
+//#define MOCK_OBD
+#define DONT_WRITE_LOG
 
 #define NUM_GEARS 5
 
