@@ -104,11 +104,21 @@ void collect() {
 	engineTemp = readInt();
 	clutchPlay = readBool();
 	clutchDown = readBool();
+
+#ifdef MOCK_APP
+	DacConv::getInput();
+	throttlePos = readInt();
+#else
+	readInt();
+#endif
+
 	engineTemp = readInt();
 #endif
 
+#ifndef MOCK_APP
 	// read throttle pos from I2C ADC
 	throttlePos = DacConv::getInput();
+#endif
 
 #ifdef MOCK_OBD
 	 Serial.print("tp");

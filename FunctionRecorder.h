@@ -19,9 +19,10 @@
 
 #define F_REC_MIN_THROTTLE 50
 // TODO: probably 205
-#define F_REC_MAX_THROTTLE 76
+#define F_REC_MAX_THROTTLE 62
 
-#define F_REC_RESOLUTION 20
+#define F_REC_RESOLUTION 7
+#define F_REC_DELAY 6000
 
 #define F_REC_STEP ((float)(((float) F_REC_MAX_THROTTLE - F_REC_MIN_THROTTLE) / (float) F_REC_RESOLUTION))
 

@@ -52,8 +52,8 @@ void setup() {
 	pinMode(UNUSED3, INPUT);
 	pinMode(SD_CS, OUTPUT);
 
-	InputData::begin();
 	Wire.begin();
+	InputData::begin();
 	rec.begin();
 
 	// signal setup complete

@@ -6,8 +6,6 @@
  */
 
 #include "Debounce.h"
-#include <Arduino.h>
-#include "Timer.h"
 
 static const Int64 SAFE_DELAY = 5;
 

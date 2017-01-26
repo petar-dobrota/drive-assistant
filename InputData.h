@@ -5,7 +5,7 @@
 #include "DacConv.h"
 #include "Timer.h"
 
-#define PID_N 3
+#define PID_N 2
 
 #ifndef MOCK_OBD
 

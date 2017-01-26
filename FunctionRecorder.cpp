@@ -87,7 +87,8 @@ bool FunctionRecorder::recording(EngineControl *engine) {
 		if (InputData::clutchDown) {
 			magicSequenceCompleted = true;
 		} else {
-			return false;
+			magicSequenceCompleted = true;
+//			return false;
 		}
 	}
 
@@ -103,7 +104,7 @@ bool FunctionRecorder::recording(EngineControl *engine) {
 	}
 
 	static DelayTimer d;
-	if (d.delaying(1400, InputData::currentTimeMillis)) {
+	if (d.delaying(F_REC_DELAY, InputData::currentTimeMillis)) {
 		return true;
 	}
 
