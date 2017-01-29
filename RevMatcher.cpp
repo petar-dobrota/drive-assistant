@@ -26,6 +26,7 @@ RevMatcher::RevMatcher(EngineControl *_engine) {
 void RevMatcher::breakRevMatch() {
 	this->toGear = 0;
 	this->engine->giveUpControl();
+	this->engine->free();
 }
 
 bool RevMatcher::shouldRevMatch() {
@@ -99,7 +100,13 @@ void RevMatcher::initiate() {
 
 bool RevMatcher::revMatching() {
 
+	if (engine->isBusy()) {
+		return false;
+	}
+
 	if (!shouldRevMatch()) {
+		// call this instead of breakRevMatch because shouldRevMatch
+		// will return false few milliseconds after RM initialization
 		engine->giveUpControl();
 		return false;
 	}

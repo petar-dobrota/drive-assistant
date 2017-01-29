@@ -33,6 +33,10 @@ void FunctionRecorder::logData(int throttlePos, int rpm) {
 void FunctionRecorder::stop(EngineControl *engine) {
 	direction = 0;
 	engine->giveUpControl();
+	if (!isStoped()) {
+		direction = 0;
+		engine->giveUpControl();
+	}
 }
 
 bool FunctionRecorder::isStoped() {

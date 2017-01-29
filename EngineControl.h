@@ -16,6 +16,8 @@
 class EngineControl {
 private:
 
+	bool busy = false;
+
 public:
 	// TODO: Move to private
 	void setThrottlePos(int pos);
@@ -23,6 +25,9 @@ public:
 	void rpmSetting(float rpm);
 	// returns throttle pedal control to driver
 	void giveUpControl();
+
+	void free();
+	bool isBusy();
 };
 
 #endif /* ENGINECONTROL_H_ */

@@ -10,6 +10,8 @@ const int MAX_THROTTLE_POS = 205;
 const int MIN_THROTTLE_POS = 39;
 
 void EngineControl::setThrottlePos(int pos) {
+	this->busy = true;
+
 	DacConv::setOutput(pos);
 	digitalWrite(ENGINE_CTL, HIGH);
 
@@ -20,6 +22,8 @@ void EngineControl::setThrottlePos(int pos) {
 }
 
 void EngineControl::rpmSetting(float desiredRpm) {
+	this->busy = true;
+
 	static float closeRange = 0.08f;
 
 	float diff = (float) (InputData::rpm - desiredRpm) / (InputData::rpm + desiredRpm);
@@ -45,4 +49,12 @@ void EngineControl::giveUpControl() {
 #ifdef MOCK_OBD
 	Serial.println("m-");
 #endif
+}
+
+void EngineControl::free() {
+	this->busy = false;
+}
+
+bool EngineControl::isBusy() {
+	return busy;
 }
