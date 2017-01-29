@@ -8,6 +8,7 @@
 #ifndef OVERREVNOTIFIER_OVERREVNOTIFIER_H_
 #define OVERREVNOTIFIER_OVERREVNOTIFIER_H_
 
+#include <Arduino.h>
 #include "Pins.h"
 #include "InputData.h"
 

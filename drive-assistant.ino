@@ -11,6 +11,7 @@
 
 #include "FunctionRecorder.h"
 #include "I2CLogger.h"
+#include "SetRpmTester.h"
 
 // obd adapter pinout:
 // rx - white
@@ -34,14 +35,13 @@ OverrevNotifier overrevNotifier;
 FunctionRecorder rec;
 
 void beep() {
-	digitalWrite(OVERREV_ALARM_PIN, LOW);
-	delay(120);
-	digitalWrite(OVERREV_ALARM_PIN, HIGH);
+	pinMode(OVERREV_ALARM_PIN, OUTPUT);
+	delay(100);
+	pinMode(OVERREV_ALARM_PIN, INPUT);
 }
 
 void setup() {
-	pinMode(OVERREV_ALARM_PIN, OUTPUT);
-	digitalWrite(OVERREV_ALARM_PIN, HIGH); // HIGH means OFF
+	pinMode(OVERREV_ALARM_PIN, INPUT); // HIGH-Z means alarm OFF
 	pinMode(CLUTCH_DOWN_PIN, INPUT);
 	pinMode(CLUTCH_PLAY_PIN, INPUT);
 	pinMode(FORCE_RM_PIN, INPUT);
@@ -73,6 +73,7 @@ void loop() {
 	
 	
 	rec.recording(&engine);
+	SetRpmTester::setRpmTesting(&engine);
 	I2CLogger::logThrottleToRpm();
 	revMatcher.revMatching();
 

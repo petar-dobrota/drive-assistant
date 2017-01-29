@@ -18,6 +18,10 @@ const float GEAR_RATIO_TOLERANCE = 0.05f; // gear ratio tolerance when determina
 	}
 #endif
 
+	BLEPeripheral blePeripheral;
+	BLEService bleService("19B10010-E8F2-537E-4F6C-D104768A1266");
+	BLECharCharacteristic bleForceRpm("19B10010-E8F2-537E-4F6C-D104768A1266", BLERead | BLEWrite);
+
 	int p[PID_N];
 	byte pids[PID_N];
 
@@ -32,11 +36,23 @@ const float GEAR_RATIO_TOLERANCE = 0.05f; // gear ratio tolerance when determina
 	int throttlePos = 0;
 
 	Int64 currentTimeMillis;
+
 bool begin() {
 
 	pids[0] = PID_RPM;
 	pids[1] = PID_SPEED;
-	pids[2] = PID_COOLANT_TEMP;
+//	pids[2] = PID_COOLANT_TEMP;
+
+	blePeripheral.setLocalName("Drive-Assistant");
+	blePeripheral.setAdvertisedServiceUuid(bleService.uuid());
+
+	blePeripheral.addAttribute(bleService);
+	blePeripheral.addAttribute(bleForceRpm);
+
+	bleForceRpm.setValue(-1);
+
+	blePeripheral.begin();
+
 #ifndef MOCK_OBD
 	obd.begin();
 	while (!obd.init());
@@ -134,4 +150,9 @@ bool breakRevMatch() {
 	return throttlePos > 130;
 }
 
+int forceRpm() {
+	return bleForceRpm.value() * 100;
 }
+
+}
+

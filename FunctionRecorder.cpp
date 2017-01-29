@@ -7,6 +7,8 @@
 
 #include "FunctionRecorder.h"
 
+RpmThrottle fData[2 * ((F_REC_RESOLUTION) + 1)];
+
 FunctionRecorder::FunctionRecorder() {
 
 }
@@ -25,14 +27,11 @@ void FunctionRecorder::logData(int throttlePos, int rpm) {
 	point.rpm = rpm;
 	point.throttlePos = throttlePos;
 
-	EEPROM.put(currAddr, point);
-	currAddr+=sizeof(RpmThrottle);
-
+	fData[currAddr] = point;
+	currAddr++;
 }
 
 void FunctionRecorder::stop(EngineControl *engine) {
-	direction = 0;
-	engine->giveUpControl();
 	if (!isStoped()) {
 		direction = 0;
 		engine->giveUpControl();
@@ -121,7 +120,10 @@ bool FunctionRecorder::recording(EngineControl *engine) {
 	} else if (i < 0) {
 		// reached beginning, do one iteration for now -> break
 		stop(engine);
+
+		EEPROM.put(0, fData);
 		return false;
 	}
 
+	return true;
 }

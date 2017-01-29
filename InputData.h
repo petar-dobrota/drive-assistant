@@ -4,6 +4,7 @@
 #include "OBD.h"
 #include "DacConv.h"
 #include "Timer.h"
+#include "CurieBLE.h"
 
 #define PID_N 2
 
@@ -26,11 +27,12 @@ namespace InputData {
 	extern int lastGear;
 	extern bool gearSelected;
 	extern bool forceRevMatch;
-	extern bool breakRevMatch();
 	extern int throttlePos;
 	extern Int64 currentTimeMillis;
 	
+	bool breakRevMatch();
+	int forceRpm();
+
 	bool begin();
-	
 	void collect();
 };
