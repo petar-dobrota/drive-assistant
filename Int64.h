@@ -12,6 +12,14 @@ public:
 	Int64 operator-() const;
 	Int64 operator-(const Int64 &x) const;
 	
+	inline unsigned long low() {
+		return this->lowBytes;
+	}
+
+	inline long high() {
+		return this->highBytes;
+	}
+
 	bool operator==(const Int64 &other) const;
 	bool operator!=(const Int64 &other) const;
 	
