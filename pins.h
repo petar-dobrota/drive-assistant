@@ -17,7 +17,7 @@
 #define ENGINE_CTL 7			// OUT
 #define UNUSED2 8
 #define UNUSED3 9
-#define SD_CS 10				// OUT
+#define UNUSED4 10				// OUT
 #define SD_MOSI 11				// OUT
 #define SD_MISO 12				// IN
 #define SD_SCK 13				// OUT

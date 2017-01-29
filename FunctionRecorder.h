@@ -8,7 +8,6 @@
 #ifndef DRIVE_ASSISTANT_FUNCTIONRECORDER_H_
 #define DRIVE_ASSISTANT_FUNCTIONRECORDER_H_
 
-#include <DataLogger.h>
 #include "Pins.h"
 #include "InputData.h"
 #include "EngineControl.h"

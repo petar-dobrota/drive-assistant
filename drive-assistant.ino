@@ -50,7 +50,7 @@ void setup() {
 	pinMode(ENGINE_CTL, OUTPUT);
 	pinMode(UNUSED2, INPUT);
 	pinMode(UNUSED3, INPUT);
-	pinMode(SD_CS, OUTPUT);
+	pinMode(UNUSED4, INPUT);
 
 	Wire.begin();
 	InputData::begin();
@@ -67,18 +67,14 @@ void setup() {
 void loop() {
 
 	InputData::collect();
+	engine.free();
 
 	overrevNotifier.highRevNotifying();
-
-	if (rec.recording(&engine)) {
-		return;
-	}
-
-	I2CLogger::logThrottleToRpm();
 	
-	if (revMatcher.revMatching()) {
-		return;
-	}
+	
+	rec.recording(&engine);
+	I2CLogger::logThrottleToRpm();
+	revMatcher.revMatching();
 
 	// TODO: cruiseControling, launchControling
 

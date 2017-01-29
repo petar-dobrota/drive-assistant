@@ -8,9 +8,9 @@
 #include "RevMatcher.h"
 
 #ifdef MOCK_OBD
-	const Int64 REV_MATCH_MAX_DURATION(1000000);
+const Int64 REV_MATCH_MAX_DURATION(1000000);
 #else
-	const Int64 REV_MATCH_MAX_DURATION(2000);
+const Int64 REV_MATCH_MAX_DURATION(2000);
 #endif
 
 const Int64 REV_MATCH_START_DELAY(200); // give clutch plate some time to disengage
@@ -54,8 +54,7 @@ bool RevMatcher::shouldRevMatch() {
 
 		// check only whether is right time to RevMatch, if it's not, no need for breakRevMatch
 		shouldRevMatch = shouldRevMatch && (revmatchStartTime < InputData::currentTimeMillis);
-		shouldRevMatch = shouldRevMatch &&
-				(revmatchStartTime + REV_MATCH_MAX_DURATION > InputData::currentTimeMillis);
+		shouldRevMatch = shouldRevMatch && (revmatchStartTime + REV_MATCH_MAX_DURATION > InputData::currentTimeMillis);
 
 	} else {
 		clutchWasDown = false;
