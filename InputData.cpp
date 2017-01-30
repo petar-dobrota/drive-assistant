@@ -31,7 +31,7 @@ byte pids[PID_N];
 
 int& rpm = p[0];
 int& speed = p[1];
-int& engineTemp = p[2];
+int engineTemp = 80;
 bool clutchDown = false;
 bool clutchPlay = false;
 int lastGear = 0;
@@ -157,13 +157,9 @@ void collect() {
 	currentTimeMillis = Timer::currentTimeMillis();
 	tmp = currentTimeMillis - tmp;
 
-	if (abs((bleLastIterationMillis.value() - tmp.low())) > 1) {
-		bleLastIterationMillis.setValue(tmp.low());
-	}
+	bleLastIterationMillis.setValue(tmp.low());
 	unsigned newAvg = (unsigned) (((float) currentTimeMillis.low() / numIterations) + 0.5f);
-	if (abs((bleAvgIterationMillis.value() - newAvg)) > 1) {
-		bleAvgIterationMillis.setValue(newAvg);
-	}
+	bleAvgIterationMillis.setValue(newAvg);
 
 }
 

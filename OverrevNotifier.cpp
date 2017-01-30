@@ -14,5 +14,5 @@ OverrevNotifier::OverrevNotifier() {
 
 void OverrevNotifier::highRevNotifying() {
 	// OUTPUT means ringing
-	pinMode(OVERREV_ALARM_PIN, InputData::rpm > REV_LIMIT ? OUTPUT : INPUT);
+	pinMode(OVERREV_ALARM_PIN, (InputData::rpm > REV_LIMIT && InputData::rpm < 9000) ? OUTPUT : INPUT);
 }

@@ -21,7 +21,7 @@ namespace InputData {
 
 	extern int& rpm;
 	extern int& speed;
-	extern int& engineTemp;
+	extern int engineTemp;
 	extern bool clutchDown;
 	extern bool clutchPlay;
 	extern int lastGear;

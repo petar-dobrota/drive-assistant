@@ -55,7 +55,6 @@ bool RevMatcher::shouldRevMatch() {
 		// check only whether is right time to RevMatch, if it's not, no need for breakRevMatch
 		shouldRevMatch = shouldRevMatch && (revmatchStartTime < InputData::currentTimeMillis);
 		shouldRevMatch = shouldRevMatch && (revmatchStartTime + REV_MATCH_MAX_DURATION > InputData::currentTimeMillis);
-
 	} else {
 		clutchWasDown = false;
 		breakRevMatch();
@@ -92,7 +91,6 @@ void RevMatcher::initiate() {
 		// downshifting for more than one gear - don't do that!
 		toGear = 0;
 	}
-
 	// TODO: Check how reliable is input.lastGear. If it reliable try to shift to lastGear-1(check rpm will be between 3k and 5k)
 	// If it's not reliable, sack checking last gear at all
 }
@@ -106,10 +104,8 @@ bool RevMatcher::revMatching() {
 	if (!shouldRevMatch()) {
 		// call this instead of breakRevMatch because shouldRevMatch
 		// will return false few milliseconds after RM initialization
-		engine->giveUpControl();
 		return false;
 	}
-
 	float targetRpm = GEAR_RATIOS[this->toGear - 1] * InputData::speed;
 
 	// do rev matching if engine isn't in use by somebody else

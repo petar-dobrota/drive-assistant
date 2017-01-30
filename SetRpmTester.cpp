@@ -17,8 +17,6 @@ bool setRpmTesting(EngineControl *engine) {
 
 	int forceRpm = InputData::forceRpm();
 	if (forceRpm < 800 || forceRpm > 7500) {
-		engine->giveUpControl();
-		engine->free();
 		return false;
 	}
 
