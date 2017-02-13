@@ -75,8 +75,11 @@ void loop() {
 	rec.recording(&engine);
 	SetRpmTester::setRpmTesting(&engine);
 	I2CLogger::logThrottleToRpm();
-	revMatcher.revMatching();
+	//revMatcher.revMatching();
 
+	if (!engine.isBusy()) {
+		engine.giveUpControl();
+	}
 	// TODO: cruiseControling, launchControling
 
 }

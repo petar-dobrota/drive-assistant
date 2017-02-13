@@ -24,7 +24,7 @@ BLEService bleService("19B10010-E8F2-537E-4F6C-D104768A1266");
 BLECharCharacteristic bleForceRpm("19B10010-E8F2-537E-4F6C-D104768A1266", BLERead | BLEWrite);
 BLEUnsignedIntCharacteristic bleLastIterationMillis("19B10010-E8F2-537E-4F6C-D104768A1267", BLERead);
 BLEUnsignedIntCharacteristic bleAvgIterationMillis("19B10010-E8F2-537E-4F6C-D104768A1268", BLERead);
-BLEUnsignedIntCharacteristic bleRef("19B10010-E8F2-537E-4F6C-D104768A1269", BLERead);
+BLEUnsignedIntCharacteristic bleRpm("19B10010-E8F2-537E-4F6C-D104768A1269", BLERead);
 
 int p[PID_N];
 byte pids[PID_N];
@@ -54,10 +54,9 @@ bool begin() {
 	blePeripheral.addAttribute(bleForceRpm);
 	blePeripheral.addAttribute(bleLastIterationMillis);
 	blePeripheral.addAttribute(bleAvgIterationMillis);
-	blePeripheral.addAttribute(bleRef);
+	blePeripheral.addAttribute(bleRpm);
 
 	bleForceRpm.setValue(-1);
-	bleRef.setValue(100);
 
 	blePeripheral.begin();
 
@@ -107,10 +106,11 @@ void collect() {
 
 	bool success = false;
 
+	int ttmp;
 	for (int i = 0; i < 10 && !success; i++) {
-		int pidReads = obd.readPID(pids, PID_N, p);
-		success = pidReads == PID_N;
+		success = obd.readPID(PID_RPM, ttmp);
 	}
+	rpm = ttmp;
 
 	clutchDown = false; //digitalRead(CLUTCH_DOWN_PIN);
 
@@ -157,9 +157,17 @@ void collect() {
 	currentTimeMillis = Timer::currentTimeMillis();
 	tmp = currentTimeMillis - tmp;
 
-	bleLastIterationMillis.setValue(tmp.low());
+	if (bleLastIterationMillis.value() != tmp.low()) {
+		bleLastIterationMillis.setValue(tmp.low());
+	}
 	unsigned newAvg = (unsigned) (((float) currentTimeMillis.low() / numIterations) + 0.5f);
-	bleAvgIterationMillis.setValue(newAvg);
+	if (newAvg != bleAvgIterationMillis.value()) {
+		bleAvgIterationMillis.setValue(newAvg);
+	}
+
+	if (abs(bleRpm.value() - rpm) > 10) {
+		bleRpm.setValue(rpm);
+	}
 
 }
 

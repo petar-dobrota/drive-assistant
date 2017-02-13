@@ -57,6 +57,7 @@ bool RevMatcher::shouldRevMatch() {
 		shouldRevMatch = shouldRevMatch && (revmatchStartTime + REV_MATCH_MAX_DURATION > InputData::currentTimeMillis);
 	} else {
 		clutchWasDown = false;
+		// TODO: Shouldn't break, maybe somebody else is using engine
 		breakRevMatch();
 	}
 

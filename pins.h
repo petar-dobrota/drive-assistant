@@ -1,7 +1,7 @@
 #pragma once
 
-#define MOCK_OBD
-#define MOCK_APP
+//#define MOCK_OBD
+//#define MOCK_APP
 
 #define DONT_WRITE_LOG
 
