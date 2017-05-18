@@ -18,6 +18,7 @@ bool readBool() {
 }
 #endif
 
+#ifdef ENABLE_BLE
 BLEPeripheral blePeripheral;
 BLEService bleService("19B10010-E8F2-537E-4F6C-D104768A1266");
 
@@ -25,16 +26,16 @@ BLECharCharacteristic bleForceRpm("19B10010-E8F2-537E-4F6C-D104768A1266", BLERea
 BLEUnsignedIntCharacteristic bleLastIterationMillis("19B10010-E8F2-537E-4F6C-D104768A1267", BLERead);
 BLEUnsignedIntCharacteristic bleAvgIterationMillis("19B10010-E8F2-537E-4F6C-D104768A1268", BLERead);
 BLEUnsignedIntCharacteristic bleRpm("19B10010-E8F2-537E-4F6C-D104768A1269", BLERead);
+#endif
 
-int p[PID_N];
+int pidVal[PID_N];
 byte pids[PID_N];
 
-int& rpm = p[0];
-int& speed = p[1];
+int& rpm = pidVal[0];
+int& speed = pidVal[1];
 int engineTemp = 80;
 bool clutchDown = false;
 bool clutchPlay = false;
-int lastGear = 0;
 bool gearSelected = false;
 bool forceRevMatch = false;
 int throttlePos = 0;
@@ -45,8 +46,8 @@ bool begin() {
 
 	pids[0] = PID_RPM;
 	pids[1] = PID_SPEED;
-//	pids[2] = PID_COOLANT_TEMP;
 
+#ifdef ENABLE_BLE
 	blePeripheral.setLocalName("Drive-Assistant");
 	blePeripheral.setAdvertisedServiceUuid(bleService.uuid());
 
@@ -59,6 +60,7 @@ bool begin() {
 	bleForceRpm.setValue(-1);
 
 	blePeripheral.begin();
+#endif
 
 #ifndef MOCK_OBD
 	obd.begin();
@@ -71,46 +73,44 @@ bool begin() {
 	return true;
 }
 
-void gearMonitoring() {
+void bleCollect() {
+#ifdef ENABLE_BLE
+	// time update and collect execution time data
+	static float numIterations = 0.0f;
+	static Int64 lastIterationTime = currentTimeMillis;
 
-	if (clutchPlay || clutchDown) {
-		gearSelected = false;
-		return;
+	numIterations += 1.0f;
+	Int64 timeDelta = currentTimeMillis - lastIterationTime;
+
+	if (bleLastIterationMillis.value() != timeDelta.low()) {
+		bleLastIterationMillis.setValue(timeDelta.low());
+	}
+	unsigned newAvg = (unsigned) (((float) currentTimeMillis.low() / numIterations) + 0.5f);
+	if (newAvg != bleAvgIterationMillis.value()) {
+		bleAvgIterationMillis.setValue(newAvg);
 	}
 
-	float currRatio = rpm / (float) speed;
-	int gear = -1;
-
-	for (int i = 0; i < NUM_GEARS; i++) {
-		float maxDelta = GEAR_RATIOS[i] * GEAR_RATIO_TOLERANCE;
-		if ((currRatio > GEAR_RATIOS[i] - maxDelta) && (currRatio < GEAR_RATIOS[i] + maxDelta)) {
-			gear = i + 1;
-			break;
-		}
+	if (abs(bleRpm.value() - rpm) > 10) {
+		bleRpm.setValue(rpm);
 	}
 
-	if (gear != -1) {
-		lastGear = gear;
-		gearSelected = true;
-	} else {
-		gearSelected = false;
-	}
-
+	lastIterationTime = currentTimeMillis;
+#endif
 }
 
 void collect() {
 
+	noInterrupts();
+	currentTimeMillis = Timer::currentTimeMillis();
+	interrupts();
+
 #ifndef MOCK_OBD
 
-	// TODO: Uncomment code below when piece of shit OBD driver is being fixed
-
-	bool success = false;
-
-	int ttmp;
-	for (int i = 0; i < 10 && !success; i++) {
-		success = obd.readPID(PID_RPM, ttmp);
-	}
-	rpm = ttmp;
+	bool readOk = false;
+	do {
+		int numRead = obd.readPID(pids, PID_N, pidVal);
+		readOk = numRead == PID_N;
+	} while(!readOk);
 
 	clutchDown = false; //digitalRead(CLUTCH_DOWN_PIN);
 
@@ -132,7 +132,7 @@ void collect() {
 	DacConv::getInput();
 	throttlePos = readInt();
 #else
-	readInt();
+	readInt(); // ignore sent APP value
 #endif
 
 	engineTemp = readInt();
@@ -148,27 +148,7 @@ void collect() {
 	Serial.println(throttlePos);
 #endif
 
-	gearMonitoring();
-
-	// time update and collect execution time data
-	static float numIterations = 0.0f;
-	numIterations += 1.0f;
-	Int64 tmp = currentTimeMillis;
-	currentTimeMillis = Timer::currentTimeMillis();
-	tmp = currentTimeMillis - tmp;
-
-	if (bleLastIterationMillis.value() != tmp.low()) {
-		bleLastIterationMillis.setValue(tmp.low());
-	}
-	unsigned newAvg = (unsigned) (((float) currentTimeMillis.low() / numIterations) + 0.5f);
-	if (newAvg != bleAvgIterationMillis.value()) {
-		bleAvgIterationMillis.setValue(newAvg);
-	}
-
-	if (abs(bleRpm.value() - rpm) > 10) {
-		bleRpm.setValue(rpm);
-	}
-
+	bleCollect();
 }
 
 bool breakRevMatch() {
@@ -176,7 +156,11 @@ bool breakRevMatch() {
 }
 
 int forceRpm() {
+#ifdef ENABLE_BLE
 	return bleForceRpm.value() * 100;
+#else
+	return 0;
+#endif
 }
 
 }

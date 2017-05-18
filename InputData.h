@@ -1,18 +1,20 @@
 #pragma once
 
 #include "Pins.h"
-#include "OBD.h"
+#include "OBD2UART.h"
 #include "DacConv.h"
 #include "Timer.h"
-#include "CurieBLE.h"
+
+#ifdef ENABLE_BLE
+	#include "CurieBLE.h"
+#endif
 
 #define PID_N 2
 
-#ifndef MOCK_OBD
-
-#else
+#ifdef MOCK_OBD
 	#include "SPI.h"
 	#include "Print.h"
+#else
 #endif
 
 extern const float GEAR_RATIOS[];

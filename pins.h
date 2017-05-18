@@ -1,11 +1,11 @@
 #pragma once
 
-//#define MOCK_OBD
+//#define ENABLE_I2C_LOGGER
 //#define MOCK_APP
+//#define MOCK_OBD
+#define ENABLE_BLE
 
-#define DONT_WRITE_LOG
 
-#define NUM_GEARS 5
 
 #define OBD_RX 0				// IN
 #define OBD_TX 1				// OUT
@@ -17,8 +17,8 @@
 #define ENGINE_CTL 7			// OUT
 #define UNUSED2 8
 #define UNUSED3 9
-#define UNUSED4 10				// OUT
-#define SD_MOSI 11				// OUT
-#define SD_MISO 12				// IN
-#define SD_SCK 13				// OUT
+#define UNUSED4 10
+#define SOFT_OBD_RX 11			// IN
+#define SOFT_OBD_TX 12			// OUT
+#define UNUSED5 13
 

@@ -11,21 +11,31 @@
 #include "EngineControl.h"
 #include "InputData.h"
 #include "Pins.h"
-#include "Int64.h"
+#include "Gears.h"
 
 class RevMatcher {
 
 private:
-	bool clutchWasDown = false;
+	enum State {
+		idle,
+		prepared,
+		inProgress,
+		canceled,
+		disabled
+	};
 
+	int calcNextGear();
+	bool rpmSweetSpot(int rpm);
+	void transitionToCanceled();
+	void rmInProgress();
+
+	State state;
 	Int64 revmatchStartTime = Int64(0);
 	int toGear;
 
 
 	EngineControl *engine;
-	bool shouldRevMatch();
-	void breakRevMatch();
-	void initiate();
+
 public:
 
 	RevMatcher(EngineControl *e);

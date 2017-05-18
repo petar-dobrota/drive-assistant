@@ -10,7 +10,7 @@
 namespace I2CLogger {
 
 void logThrottleToRpm () {
-#ifndef DONT_WRITE_LOG
+#ifdef ENABLE_I2C_LOGGER
 	Wire.beginTransmission(8);
 
 	Wire.print(millis());

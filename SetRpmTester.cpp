@@ -11,12 +11,8 @@ namespace SetRpmTester {
 
 bool setRpmTesting(EngineControl *engine) {
 
-	if (engine->isBusy()) {
-		return false;
-	}
-
 	int forceRpm = InputData::forceRpm();
-	if (forceRpm < 800 || forceRpm > 7500) {
+	if (forceRpm < 800 || forceRpm > 7000) {
 		return false;
 	}
 
